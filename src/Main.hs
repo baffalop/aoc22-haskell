@@ -14,7 +14,7 @@ main = do
   case args of
     [] -> error "Please pass a day number"
     dayString : _ -> do
-      let day = (read dayString)::Day
+      let day = read dayString::Day
       let solve = getSolution day
       input <- readFile $ "input/" <> pad0 dayString <> ".txt"
       let (sol1, sol2) = solve input

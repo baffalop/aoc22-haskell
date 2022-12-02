@@ -1,0 +1,30 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           aoc22-haskell
+version:        0.1.0.0
+homepage:       https://github.com/baffalop/aoc22-haskell#readme
+author:         Nikita Gaidakov
+maintainer:     Nikita Gaidakov
+copyright:      2022 Nikita Gaidakov
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+executable aoc22-haskell
+  main-is: Main.hs
+  other-modules:
+      Day01
+      Day02
+      Paths_aoc22_haskell
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010

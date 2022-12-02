@@ -1,0 +1,30 @@
+name:                aoc22-haskell
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/baffalop/aoc22-haskell#readme
+license:             BSD3
+author:              Nikita Gaidakov
+copyright:           2022 Nikita Gaidakov
+
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+executables:
+  aoc22-haskell:
+    source-dirs:      src
+    main:             Main.hs

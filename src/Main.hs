@@ -16,7 +16,7 @@ main = do
     dayString : _ -> do
       let day = (read dayString)::Day
       let solve = getSolution day
-      input <- readFile $ pad0 dayString ++ ".txt"
+      input <- readFile $ "input/" <> pad0 dayString <> ".txt"
       let (sol1, sol2) = solve input
       putStrLn $ "Part 1: " <> show sol1
       putStrLn $ "Part 2: " <> show sol2

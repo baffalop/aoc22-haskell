@@ -1,25 +1,21 @@
 module Day03 (parse, solve1, solve2) where
 
-import Data.Set (Set, intersection, union)
-import qualified Data.Set as Set
-import Data.List (splitAt)
+import Data.List (intersect, nub)
 import Data.List.Extra (chunksOf)
-import Data.Tuple.Extra (both)
 import Data.Char (ord)
+import Control.Monad (join)
 
-type Bag = (Set Char, Set Char)
+parse :: String -> [String]
+parse = lines
 
-parse :: String -> [Bag]
-parse = fmap (both Set.fromList . halves) . lines
+solve1 :: [String] -> Int
+solve1 = priorities . fmap (nub . uncurry intersect . halves)
 
-solve1 :: [Bag] -> Int
-solve1 = priorities . fmap (uncurry intersection)
+solve2 :: [String] -> Int
+solve2 = priorities . fmap (nub . foldr1 intersect) . chunksOf 3
 
-solve2 :: [Bag] -> Int
-solve2 = priorities . fmap (foldr1 intersection) . chunksOf 3 . fmap (uncurry union)
-
-priorities :: [Set Char] -> Int
-priorities = sum . fmap priority . concatMap Set.toList
+priorities :: [String] -> Int
+priorities = sum . fmap priority . join
 
 priority :: Char -> Int
 priority c =

@@ -1,5 +1,7 @@
 module Day02 (parse, solve1, solve2) where
 
+import Data.Tuple.Extra (first, second)
+
 data Move = Rock | Paper | Scissors
   deriving (Eq, Bounded, Enum, Show)
 
@@ -22,17 +24,17 @@ predWrap x
 data Strategy = Lose | Draw | Win
 
 parse :: String -> [(Move, String)]
-parse = fmap (mapFst parseMove . pair . words) . lines
+parse = fmap (first parseMove . pair . words) . lines
   where
     pair :: (Show a) => [a] -> (a, a)
     pair [x, y] = (x, y)
     pair input = error $ "Not two words encountered: " <> show input
 
 solve1 :: [(Move, String)] -> Int
-solve1 = sum . fmap (score . mapSnd parseMove)
+solve1 = sum . fmap (score . second parseMove)
 
 solve2 :: [(Move, String)] -> Int
-solve2 = sum . fmap (score . applyStrategy . mapSnd parseStrategy)
+solve2 = sum . fmap (score . applyStrategy . second parseStrategy)
 
 parseMove :: String -> Move
 parseMove "A" = Rock
@@ -66,9 +68,3 @@ score (x, y) = scoreMove y + scoreWin x y
       | b == a = 3
       | b == beats a = 6
       | otherwise = 0
-
-mapFst :: (a -> c) -> (a, b) -> (c, b)
-mapFst f (x, y) = (f x, y)
-
-mapSnd :: (b -> c) -> (a, b) -> (a, c)
-mapSnd f (x, y) = (x, f y)

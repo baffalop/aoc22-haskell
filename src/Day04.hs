@@ -2,13 +2,12 @@ module Day04 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
-import Data.Either (fromRight)
 
 type Area = (Int, Int)
 type Input = [(Area, Area)]
 
-parse :: Text -> Input
-parse = fromRight [] . P.parseOnly (assignment `P.sepBy` P.skipSpace)
+parse :: Text -> Either String Input
+parse = P.parseOnly (assignment `P.sepBy` P.skipSpace)
   where
     assignment = (,) <$> area <* P.char ',' <*> area
     area = (,) <$> P.decimal <* P.char '-' <*> P.decimal

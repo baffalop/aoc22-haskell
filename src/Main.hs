@@ -21,18 +21,19 @@ main = do
       let day = read dayString::Day
       let solve = getSolution day
       input <- T.readFile $ "input/" <> pad0 dayString <> ".txt"
-      let (sol1, sol2) = solve input
-      putStrLn $ "Part 1: " <> show sol1
-      putStrLn $ "Part 2: " <> show sol2
+      case solve input of
+        Left err ->
+          putStrLn $ "Parse error: " <> err
+        Right (sol1, sol2) -> do
+          putStrLn $ "Part 1: " <> show sol1
+          putStrLn $ "Part 2: " <> show sol2
 
-
-getSolution :: Day -> (Text -> (Int, Int))
-getSolution 1 = (Day01.solve1 &&& Day01.solve2) . Day01.parse
-getSolution 2 = (Day02.solve1 &&& Day02.solve2) . Day02.parse
-getSolution 3 = (Day03.solve1 &&& Day03.solve2) . Day03.parse
-getSolution 4 = (Day04.solve1 &&& Day04.solve2) . Day04.parse
+getSolution :: Day -> Text -> Either String (Int, Int)
+getSolution 1 = Right . (Day01.solve1 &&& Day01.solve2) . Day01.parse
+getSolution 2 = Right . (Day02.solve1 &&& Day02.solve2) . Day02.parse
+getSolution 3 = Right . (Day03.solve1 &&& Day03.solve2) . Day03.parse
+getSolution 4 = fmap (Day04.solve1 &&& Day04.solve2) . Day04.parse
 getSolution day = error $ "No solution for day " <> show day <> " yet"
-
 
 pad0 :: String -> String
 pad0 [n] = ['0', n]

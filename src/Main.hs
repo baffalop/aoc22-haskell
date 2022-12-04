@@ -8,6 +8,7 @@ import Control.Arrow ((&&&))
 import qualified Day01
 import qualified Day02
 import qualified Day03
+import qualified Day04
 
 type Day = Int
 
@@ -29,6 +30,7 @@ getSolution :: Day -> (Text -> (Int, Int))
 getSolution 1 = (Day01.solve1 &&& Day01.solve2) . Day01.parse
 getSolution 2 = (Day02.solve1 &&& Day02.solve2) . Day02.parse
 getSolution 3 = (Day03.solve1 &&& Day03.solve2) . Day03.parse
+getSolution 4 = (Day04.solve1 &&& Day04.solve2) . Day04.parse
 getSolution day = error $ "No solution for day " <> show day <> " yet"
 
 

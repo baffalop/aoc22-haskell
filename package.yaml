@@ -15,6 +15,7 @@ dependencies:
   - containers
   - text
   - extra
+  - attoparsec
 
 ghc-options:
 - -Wall
@@ -26,6 +27,7 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -XTupleSections
 
 executables:
   aoc22-haskell:

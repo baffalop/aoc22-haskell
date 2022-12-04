@@ -1,9 +1,10 @@
 module Day01 (parse, solve1, solve2) where
 
+import Data.Text (Text, unpack)
 import Data.List (sortOn, break)
 
-parse :: String -> [Int]
-parse = fmap (sum . fmap read) . splitOn "" . lines
+parse :: Text -> [Int]
+parse = fmap (sum . fmap read) . splitOn "" . lines . unpack
 
 solve1 :: [Int] -> Int
 solve1 = maximum

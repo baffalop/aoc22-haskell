@@ -1,5 +1,6 @@
 module Day02 (parse, solve1, solve2) where
 
+import Data.Text (Text, unpack)
 import Data.Tuple.Extra (first, second)
 
 data Move = Rock | Paper | Scissors
@@ -23,8 +24,8 @@ predWrap x
 
 data Strategy = Lose | Draw | Win
 
-parse :: String -> [(Move, String)]
-parse = fmap (first parseMove . pair . words) . lines
+parse :: Text -> [(Move, String)]
+parse = fmap (first parseMove . pair . words) . lines . unpack
   where
     pair :: (Show a) => [a] -> (a, a)
     pair [x, y] = (x, y)

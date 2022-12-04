@@ -1,11 +1,12 @@
 module Day03 (parse, solve1, solve2) where
 
+import Data.Text (Text, unpack)
 import Data.List (intersect)
 import Data.List.Extra (chunksOf)
 import Data.Char (ord)
 
-parse :: String -> [String]
-parse = lines
+parse :: Text -> [String]
+parse = lines . unpack
 
 solve1 :: [String] -> Int
 solve1 = priorities . fmap (head . uncurry intersect . halves)

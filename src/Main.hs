@@ -1,6 +1,8 @@
 module Main (main) where
 
 import System.Environment (getArgs)
+import Data.Text (Text)
+import qualified Data.Text.IO as T
 import Control.Arrow ((&&&))
 
 import qualified Day01
@@ -17,13 +19,13 @@ main = do
     dayString : _ -> do
       let day = read dayString::Day
       let solve = getSolution day
-      input <- readFile $ "input/" <> pad0 dayString <> ".txt"
+      input <- T.readFile $ "input/" <> pad0 dayString <> ".txt"
       let (sol1, sol2) = solve input
       putStrLn $ "Part 1: " <> show sol1
       putStrLn $ "Part 2: " <> show sol2
 
 
-getSolution :: Day -> (String -> (Int, Int))
+getSolution :: Day -> (Text -> (Int, Int))
 getSolution 1 = (Day01.solve1 &&& Day01.solve2) . Day01.parse
 getSolution 2 = (Day02.solve1 &&& Day02.solve2) . Day02.parse
 getSolution 3 = (Day03.solve1 &&& Day03.solve2) . Day03.parse

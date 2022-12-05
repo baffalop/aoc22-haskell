@@ -44,9 +44,8 @@ parse = P.parseOnly $ Input
     instruction :: Parser Instruction
     instruction = Instruction
       <$ P.string "move " <*> P.decimal
-      <* P.string " from " <*> P.decimal
-      <* P.string " to " <*> P.decimal
-
+      <* P.string " from " <*> (subtract 1 <$> P.decimal)
+      <* P.string " to " <*> (subtract 1 <$> P.decimal)
 
 solve1 :: Input -> String
 solve1 = solveWith reverse
@@ -61,8 +60,8 @@ solveWith adjust Input{ stacks, instructions } =
 runWith :: (String -> String) -> Instruction -> Stacks -> Stacks
 runWith adjust Instruction{ n, from, to } stacks =
   fromMaybe stacks $ do
-    (top, rest) <- splitAt n <$> Seq.lookup (from - 1) stacks
-    pure $ Seq.adjust' (adjust top <>) (to - 1) $ Seq.update (from - 1) rest stacks
+    (top, rest) <- splitAt n <$> Seq.lookup from stacks
+    pure $ Seq.adjust' (adjust top <>) to $ Seq.update from rest stacks
 
 toList :: Foldable f => f a -> [a]
 toList = foldr (:) []

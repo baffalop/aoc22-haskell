@@ -7,7 +7,7 @@ import qualified Data.Attoparsec.Text as P
 import Data.Attoparsec.Text (Parser)
 import Parsing (linesOf)
 import Data.Maybe (catMaybes, fromMaybe)
-import Data.List (transpose, uncons)
+import Data.List (transpose)
 import Control.Applicative ((<|>))
 import Data.Foldable (foldl')
 
@@ -48,24 +48,22 @@ parse = P.parseOnly $ Input
 
 
 solve1 :: Input -> String
-solve1 Input{ stacks, instructions } =
-  catMaybes $ toList $ headMay <$> foldl' (flip run) stacks instructions
+solve1 = solveWith reverse
 
-run :: Instruction -> Stacks -> Stacks
-run Instruction{ n, from, to } = nTimes n apply
-  where
-    apply stacks = fromMaybe stacks $ do
-      (top, rest) <- uncons =<< Seq.lookup (from - 1) stacks
-      pure $ Seq.adjust' (top :) (to - 1) $ Seq.update (from - 1) rest stacks
+solve2 :: Input -> String
+solve2 = solveWith id
 
-solve2 = undefined
+solveWith :: (String -> String) -> Input -> String
+solveWith adjust Input{ stacks, instructions } =
+  catMaybes $ toList $ headMay <$> foldl' (flip $ runWith adjust) stacks instructions
 
-nTimes :: Int -> (a -> a) -> a -> a
-nTimes n f x
-  | n <= 0 = x
-  | otherwise = nTimes (n - 1) f $ f x
+runWith :: (String -> String) -> Instruction -> Stacks -> Stacks
+runWith adjust Instruction{ n, from, to } stacks =
+  fromMaybe stacks $ do
+    (top, rest) <- splitAt n <$> Seq.lookup (from - 1) stacks
+    pure $ Seq.adjust' (adjust top <>) (to - 1) $ Seq.update (from - 1) rest stacks
 
-toList :: Seq a -> [a]
+toList :: Foldable f => f a -> [a]
 toList = foldr (:) []
 
 headMay :: [a] -> Maybe a

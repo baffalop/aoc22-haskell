@@ -54,14 +54,14 @@ solve2 :: Input -> String
 solve2 = solveWith id
 
 solveWith :: (String -> String) -> Input -> String
-solveWith adjust Input{ stacks, instructions } =
-  catMaybes $ toList $ headMay <$> foldl' (flip $ runWith adjust) stacks instructions
+solveWith tweak Input{ stacks, instructions } =
+  catMaybes $ toList $ headMay <$> foldl' (flip $ runWith tweak) stacks instructions
 
 runWith :: (String -> String) -> Instruction -> Stacks -> Stacks
-runWith adjust Instruction{ n, from, to } stacks =
+runWith tweak Instruction{ n, from, to } stacks =
   fromMaybe stacks $ do
     (top, rest) <- splitAt n <$> Seq.lookup from stacks
-    pure $ Seq.adjust' (adjust top <>) to $ Seq.update from rest stacks
+    pure $ Seq.adjust' (tweak top <>) to $ Seq.update from rest stacks
 
 toList :: Foldable f => f a -> [a]
 toList = foldr (:) []

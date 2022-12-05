@@ -28,6 +28,7 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 - -XOverloadedStrings
+- -XNamedFieldPuns
 - -XTupleSections
 - -XLambdaCase
 

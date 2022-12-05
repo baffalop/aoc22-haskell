@@ -7,6 +7,7 @@ import qualified Data.Attoparsec.Text as P
 import Data.Attoparsec.Text (Parser)
 import Parsing (linesOf)
 import Data.Maybe (catMaybes, fromMaybe)
+import Safe (headMay)
 import Data.List (transpose)
 import Control.Applicative ((<|>))
 import Data.Foldable (foldl', toList)
@@ -62,7 +63,3 @@ runWith tweak Instruction{ n, from, to } stacks =
   fromMaybe stacks $ do
     (top, rest) <- splitAt n <$> Seq.lookup from stacks
     pure $ Seq.adjust' (tweak top <>) to $ Seq.update from rest stacks
-
-headMay :: [a] -> Maybe a
-headMay [] = Nothing
-headMay (x : _) = Just x

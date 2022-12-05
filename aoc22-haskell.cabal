@@ -28,7 +28,12 @@ executable aoc22-haskell
       Paths_aoc22_haskell
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -XOverloadedStrings -XNamedFieldPuns -XTupleSections -XLambdaCase
+  default-extensions:
+      OverloadedStrings
+      NamedFieldPuns
+      TupleSections
+      LambdaCase
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       attoparsec
     , base >=4.7 && <5

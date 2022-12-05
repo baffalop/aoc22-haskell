@@ -31,10 +31,10 @@ parse = P.parseOnly $ Input
   <*> linesOf instruction
   where
     stacks :: Parser Stacks
-    stacks = Seq.fromList . fmap catMaybes . transpose <$> linesOf (stack `P.sepBy` P.char ' ')
+    stacks = Seq.fromList . fmap catMaybes . transpose <$> linesOf (crate `P.sepBy` P.char ' ')
 
-    stack :: Parser (Maybe Char)
-    stack =
+    crate :: Parser (Maybe Char)
+    crate =
       Just <$ P.char '[' <*> P.letter <* P.char ']'
       <|> Nothing <$ P.string "   "
 

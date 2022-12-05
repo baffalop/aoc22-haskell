@@ -1,8 +1,10 @@
 module Day02 (parse, solve1, solve2) where
 
-import Data.Text (Text, unpack)
-import Data.Tuple.Extra (firstM, secondM, second)
-import Control.Monad ((>=>), (<=<))
+import Data.Text (Text)
+import Data.Attoparsec.Text (Parser)
+import qualified Data.Attoparsec.Text as P
+import Data.Tuple.Extra (second)
+import Control.Applicative ((<|>))
 
 data Move = Rock | Paper | Scissors
   deriving (Eq, Bounded, Enum, Show)
@@ -26,26 +28,20 @@ predWrap x
 data Strategy = Lose | Draw | Win
 
 parse :: Text -> Either String [(Move, Move)]
-parse = traverse (bothM parseMove <=< pair . words) . lines . unpack
+parse = P.parseOnly $ linesOf (pairBy ' ' move)
   where
-    pair :: (Show a) => [a] -> Either String (a, a)
-    pair [x, y] = Right (x, y)
-    pair input = Left $ "Not two words encountered: " <> show input
+    move :: Parser Move
+    move = P.choice
+      [ Rock <$ (P.char 'A' <|> P.char 'X')
+      , Paper <$ (P.char 'B' <|> P.char 'Y')
+      , Scissors <$ (P.char 'C' <|> P.char 'Z')
+      ]
 
 solve1 :: [(Move, Move)] -> Int
 solve1 = sum . fmap score
 
 solve2 :: [(Move, Move)] -> Int
 solve2 = sum . fmap (score . applyStrategy . second moveToStrategy)
-
-parseMove :: String -> Either String Move
-parseMove "A" = Right Rock
-parseMove "B" = Right Paper
-parseMove "C" = Right Scissors
-parseMove "X" = Right Rock
-parseMove "Y" = Right Paper
-parseMove "Z" = Right Scissors
-parseMove input = Left $ "Cannot parse " <> input <> " as Move"
 
 moveToStrategy :: Move -> Strategy
 moveToStrategy Rock = Lose
@@ -70,5 +66,8 @@ score (x, y) = scoreMove y + scoreWin x y
       | b == beats a = 6
       | otherwise = 0
 
-bothM :: Monad m => (a -> m b) -> (a, a) -> m (b, b)
-bothM f = firstM f >=> secondM f
+linesOf :: Parser a -> Parser [a]
+linesOf = (`P.sepBy` (P.endOfLine <|> P.endOfInput))
+
+pairBy :: Char -> Parser a -> Parser (a, a)
+pairBy sep p = (,) <$> p <* P.char sep <*> p

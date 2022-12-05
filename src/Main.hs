@@ -30,7 +30,7 @@ main = do
 
 getSolution :: Day -> Text -> Either String (Int, Int)
 getSolution 1 = Right . (Day01.solve1 &&& Day01.solve2) . Day01.parse
-getSolution 2 = Right . (Day02.solve1 &&& Day02.solve2) . Day02.parse
+getSolution 2 = fmap (Day02.solve1 &&& Day02.solve2) . Day02.parse
 getSolution 3 = Right . (Day03.solve1 &&& Day03.solve2) . Day03.parse
 getSolution 4 = fmap (Day04.solve1 &&& Day04.solve2) . Day04.parse
 getSolution day = error $ "No solution for day " <> show day <> " yet"

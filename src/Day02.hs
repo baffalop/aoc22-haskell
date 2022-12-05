@@ -1,7 +1,8 @@
 module Day02 (parse, solve1, solve2) where
 
 import Data.Text (Text, unpack)
-import Data.Tuple.Extra (first, second)
+import Data.Tuple.Extra (firstM, secondM, second)
+import Control.Monad ((>=>), (<=<))
 
 data Move = Rock | Paper | Scissors
   deriving (Eq, Bounded, Enum, Show)
@@ -24,33 +25,32 @@ predWrap x
 
 data Strategy = Lose | Draw | Win
 
-parse :: Text -> [(Move, String)]
-parse = fmap (first parseMove . pair . words) . lines . unpack
+parse :: Text -> Either String [(Move, Move)]
+parse = traverse (bothM parseMove <=< pair . words) . lines . unpack
   where
-    pair :: (Show a) => [a] -> (a, a)
-    pair [x, y] = (x, y)
-    pair input = error $ "Not two words encountered: " <> show input
+    pair :: (Show a) => [a] -> Either String (a, a)
+    pair [x, y] = Right (x, y)
+    pair input = Left $ "Not two words encountered: " <> show input
 
-solve1 :: [(Move, String)] -> Int
-solve1 = sum . fmap (score . second parseMove)
+solve1 :: [(Move, Move)] -> Int
+solve1 = sum . fmap score
 
-solve2 :: [(Move, String)] -> Int
-solve2 = sum . fmap (score . applyStrategy . second parseStrategy)
+solve2 :: [(Move, Move)] -> Int
+solve2 = sum . fmap (score . applyStrategy . second moveToStrategy)
 
-parseMove :: String -> Move
-parseMove "A" = Rock
-parseMove "B" = Paper
-parseMove "C" = Scissors
-parseMove "X" = Rock
-parseMove "Y" = Paper
-parseMove "Z" = Scissors
-parseMove input = error $ "Cannot parse " <> input <> " as Move"
+parseMove :: String -> Either String Move
+parseMove "A" = Right Rock
+parseMove "B" = Right Paper
+parseMove "C" = Right Scissors
+parseMove "X" = Right Rock
+parseMove "Y" = Right Paper
+parseMove "Z" = Right Scissors
+parseMove input = Left $ "Cannot parse " <> input <> " as Move"
 
-parseStrategy :: String -> Strategy
-parseStrategy "X" = Lose
-parseStrategy "Y" = Draw
-parseStrategy "Z" = Win
-parseStrategy input = error $ "Cannot parse " <> input <> " as Strategy"
+moveToStrategy :: Move -> Strategy
+moveToStrategy Rock = Lose
+moveToStrategy Paper = Draw
+moveToStrategy Scissors = Win
 
 applyStrategy :: (Move, Strategy) -> (Move, Move)
 applyStrategy (move, strategy) = (move, response move)
@@ -69,3 +69,6 @@ score (x, y) = scoreMove y + scoreWin x y
       | b == a = 3
       | b == beats a = 6
       | otherwise = 0
+
+bothM :: Monad m => (a -> m b) -> (a, a) -> m (b, b)
+bothM f = firstM f >=> secondM f

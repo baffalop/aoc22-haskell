@@ -34,7 +34,8 @@ parse = P.parseOnly $ Input
     stacks = Seq.fromList . fmap catMaybes . transpose <$> linesOf (stack `P.sepBy` P.char ' ')
 
     stack :: Parser (Maybe Char)
-    stack = Just <$ P.char '[' <*> P.letter <* P.char ']'
+    stack =
+      Just <$ P.char '[' <*> P.letter <* P.char ']'
       <|> Nothing <$ P.string "   "
 
     indices :: Parser [Int]

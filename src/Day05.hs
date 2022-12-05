@@ -22,7 +22,10 @@ data Instruction = Instruction
   } deriving (Show)
 
 parse :: Text -> Either String Input
-parse = P.parseOnly $ Input <$> stacks <* spaces <* indices <* spaces <*> linesOf instruction
+parse = P.parseOnly $ Input
+  <$> stacks
+  <* P.skipSpace <* indices <* P.skipSpace
+  <*> linesOf instruction
   where
     stacks :: Parser Stacks
     stacks = fmap catMaybes . transpose <$> linesOf (stack `P.sepBy` P.char ' ')
@@ -33,7 +36,7 @@ parse = P.parseOnly $ Input <$> stacks <* spaces <* indices <* spaces <*> linesO
         <|> Nothing <$ P.string "   "
 
     indices :: Parser [Int]
-    indices = P.decimal `P.sepBy` spaces
+    indices = P.decimal `P.sepBy` P.skipSpace
 
     instruction :: Parser Instruction
     instruction = Instruction
@@ -44,6 +47,3 @@ parse = P.parseOnly $ Input <$> stacks <* spaces <* indices <* spaces <*> linesO
 
 solve1 = undefined
 solve2 = undefined
-
-spaces :: Parser ()
-spaces = P.skipMany P.space

@@ -23,11 +23,12 @@ executable aoc22-haskell
       Day02
       Day03
       Day04
+      Day05
       Parsing
       Paths_aoc22_haskell
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -XTupleSections -XLambdaCase
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -XOverloadedStrings -XTupleSections -XLambdaCase
   build-depends:
       attoparsec
     , base >=4.7 && <5

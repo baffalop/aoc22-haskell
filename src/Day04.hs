@@ -17,7 +17,7 @@ solve2 :: Input -> Int
 solve2 = length . filter (uncurry overlap)
 
 contains :: Area -> Area -> Bool
-contains area (x, y) = x `within` area && y `within` area
+contains area (x, y) = all (`within` area) [x, y]
 
 overlap :: Area -> Area -> Bool
 overlap a@(x1, y1) b@(x2, y2) = x1 `within` b || y1 `within` b || x2 `within` a || y2 `within` a

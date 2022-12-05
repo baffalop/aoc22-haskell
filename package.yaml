@@ -27,6 +27,7 @@ ghc-options:
 - -Wmissing-home-modules
 - -Wpartial-fields
 - -Wredundant-constraints
+- -XOverloadedStrings
 - -XTupleSections
 - -XLambdaCase
 

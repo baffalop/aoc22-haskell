@@ -9,7 +9,7 @@ import Parsing (linesOf)
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.List (transpose)
 import Control.Applicative ((<|>))
-import Data.Foldable (foldl')
+import Data.Foldable (foldl', toList)
 
 data Input = Input
   { stacks :: Stacks
@@ -62,9 +62,6 @@ runWith tweak Instruction{ n, from, to } stacks =
   fromMaybe stacks $ do
     (top, rest) <- splitAt n <$> Seq.lookup from stacks
     pure $ Seq.adjust' (tweak top <>) to $ Seq.update from rest stacks
-
-toList :: Foldable f => f a -> [a]
-toList = foldr (:) []
 
 headMay :: [a] -> Maybe a
 headMay [] = Nothing

@@ -28,6 +28,7 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 - -XTupleSections
+- -XLambdaCase
 
 executables:
   aoc22-haskell:

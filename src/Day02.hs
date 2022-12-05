@@ -41,12 +41,13 @@ solve1 :: [(Move, Move)] -> Int
 solve1 = sum . fmap score
 
 solve2 :: [(Move, Move)] -> Int
-solve2 = sum . fmap (score . applyStrategy . second moveToStrategy)
+solve2 = sum . fmap (score . applyStrategy . second reinterpretAsStrategy)
 
-moveToStrategy :: Move -> Strategy
-moveToStrategy Rock = Lose
-moveToStrategy Paper = Draw
-moveToStrategy Scissors = Win
+reinterpretAsStrategy :: Move -> Strategy
+reinterpretAsStrategy = \case
+  Rock -> Lose
+  Paper -> Draw
+  Scissors -> Win
 
 applyStrategy :: (Move, Strategy) -> (Move, Move)
 applyStrategy (move, strategy) = (move, response move)

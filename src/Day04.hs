@@ -2,15 +2,13 @@ module Day04 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
+import Parsing (linesOf, pairBy)
 
 type Area = (Int, Int)
 type Input = [(Area, Area)]
 
 parse :: Text -> Either String Input
-parse = P.parseOnly (assignment `P.sepBy` P.skipSpace)
-  where
-    assignment = (,) <$> area <* P.char ',' <*> area
-    area = (,) <$> P.decimal <* P.char '-' <*> P.decimal
+parse = P.parseOnly $ linesOf $ pairBy ',' (pairBy '-' P.decimal)
 
 solve1 :: Input -> Int
 solve1 = length . filter (\(x, y) -> x `contains` y || y `contains` x)

@@ -23,6 +23,7 @@ executable aoc22-haskell
       Day02
       Day03
       Day04
+      Parsing
       Paths_aoc22_haskell
   hs-source-dirs:
       src

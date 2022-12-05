@@ -1,8 +1,8 @@
 module Day02 (parse, solve1, solve2) where
 
 import Data.Text (Text)
-import Data.Attoparsec.Text (Parser)
 import qualified Data.Attoparsec.Text as P
+import Parsing (linesOf, pairBy)
 import Data.Tuple.Extra (second)
 import Control.Applicative ((<|>))
 
@@ -30,7 +30,7 @@ data Strategy = Lose | Draw | Win
 parse :: Text -> Either String [(Move, Move)]
 parse = P.parseOnly $ linesOf (pairBy ' ' move)
   where
-    move :: Parser Move
+    move :: P.Parser Move
     move = P.choice
       [ Rock <$ (P.char 'A' <|> P.char 'X')
       , Paper <$ (P.char 'B' <|> P.char 'Y')
@@ -66,9 +66,3 @@ score (x, y) = scoreMove y + scoreWin x y
       | b == a = 3
       | b == beats a = 6
       | otherwise = 0
-
-linesOf :: Parser a -> Parser [a]
-linesOf = (`P.sepBy` (P.endOfLine <|> P.endOfInput))
-
-pairBy :: Char -> Parser a -> Parser (a, a)
-pairBy sep p = (,) <$> p <* P.char sep <*> p

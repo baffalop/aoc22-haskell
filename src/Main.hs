@@ -11,6 +11,7 @@ import qualified Day02
 import qualified Day03
 import qualified Day04
 import qualified Day05
+import qualified Day06
 
 type Day = Int
 
@@ -36,6 +37,7 @@ getSolution 2 = fmap (both show. (Day02.solve1 &&& Day02.solve2)) . Day02.parse
 getSolution 3 = Right . both show . (Day03.solve1 &&& Day03.solve2) . Day03.parse
 getSolution 4 = fmap (both show . (Day04.solve1 &&& Day04.solve2)) . Day04.parse
 getSolution 5 = fmap (Day05.solve1 &&& Day05.solve2) . Day05.parse
+getSolution 6 = Right . both show . (Day06.solve1 &&& Day06.solve2) . Day06.parse
 getSolution day = error $ "No solution for day " <> show day <> " yet"
 
 pad0 :: String -> String

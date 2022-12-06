@@ -36,7 +36,8 @@ executable aoc22-haskell
       LambdaCase
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      attoparsec
+      advent-of-code-api
+    , attoparsec
     , base >=4.7 && <5
     , containers
     , extra

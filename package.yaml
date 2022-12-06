@@ -18,6 +18,7 @@ dependencies:
   - extra
   - attoparsec
   - optparse-applicative
+  - advent-of-code-api
 
 default-extensions:
 - OverloadedStrings

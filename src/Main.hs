@@ -1,8 +1,9 @@
 module Main (main) where
 
 import qualified Options.Applicative as Opt
+import qualified Advent
+import Advent (Day, dayInt)
 import Data.Text (Text)
-import qualified Data.Text.IO as T
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
 import Control.Arrow ((&&&))
@@ -14,14 +15,19 @@ import qualified Day03
 import qualified Day04
 import qualified Day05
 import qualified Day06
+import Control.Exception (catch, IOException)
 
-type Day = Int
+newtype SessionKey = Key String
 
 main :: IO ()
 main = do
   day <- Opt.execParser cli
+  key <- Key <$> readFile ".key" `catch` \e ->
+    let _ = e :: IOException in
+    fail "Ensure you've got the AoC session key in a `.key` file"
+  input <- fetchInput day key
+
   let solve = getSolution day
-  input <- T.readFile $ "input/" <> pad0 day <> ".txt"
   case solve input of
     Left err ->
       putStrLn $ "Parse error: " <> err
@@ -30,13 +36,14 @@ main = do
       putStrLn $ "Part 2: " <> sol2
 
 getSolution :: Day -> Text -> Either String (String, String)
-getSolution 1 = Right . both show . (Day01.solve1 &&& Day01.solve2) . Day01.parse
-getSolution 2 = fmap (both show. (Day02.solve1 &&& Day02.solve2)) . Day02.parse
-getSolution 3 = Right . both show . (Day03.solve1 &&& Day03.solve2) . Day03.parse
-getSolution 4 = fmap (both show . (Day04.solve1 &&& Day04.solve2)) . Day04.parse
-getSolution 5 = fmap (Day05.solve1 &&& Day05.solve2) . Day05.parse
-getSolution 6 = Right . both show . (Day06.solve1 &&& Day06.solve2) . Day06.parse
-getSolution day = error $ "No solution for day " <> show day <> " yet"
+getSolution day = case dayInt day of
+  1 -> Right . both show . (Day01.solve1 &&& Day01.solve2) . Day01.parse
+  2 -> fmap (both show. (Day02.solve1 &&& Day02.solve2)) . Day02.parse
+  3 -> Right . both show . (Day03.solve1 &&& Day03.solve2) . Day03.parse
+  4 -> fmap (both show . (Day04.solve1 &&& Day04.solve2)) . Day04.parse
+  5 -> fmap (Day05.solve1 &&& Day05.solve2) . Day05.parse
+  6 -> Right . both show . (Day06.solve1 &&& Day06.solve2) . Day06.parse
+  d -> error $ "No solution for day " <> show d <> " yet"
 
 cli :: Opt.ParserInfo Day
 cli =
@@ -49,15 +56,17 @@ cli =
     dayArg = Opt.argument day $ Opt.metavar "DAY" <> Opt.help "Which day's solution to run"
 
     day :: Opt.ReadM Day
-    day =
-      Opt.eitherReader $ \s -> do
-        let err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
-        n <- maybeToEither err $ readMaybe s
-        if n < 1 || n > 25
-          then Left err
-          else Right n
+    day = Opt.eitherReader $ \s ->
+      let err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
+      in maybeToEither err $ Advent.mkDay =<< readMaybe s
 
-pad0 :: Int -> String
-pad0 n = case show n of
-  [d] -> ['0', d]
-  s -> s
+fetchInput :: Day -> SessionKey -> IO Text
+fetchInput day key = do
+  putStrLn $ "Fetching input for day " <> show (dayInt day) <> "...\n"
+  response <- Advent.runAoC (aocOpts key) (Advent.AoCInput day)
+  case response of
+    Left err -> fail $ "Error response from API: " <> show err
+    Right input -> pure input
+
+aocOpts :: SessionKey -> Advent.AoCOpts
+aocOpts (Key key) = (Advent.defaultAoCOpts 2022 key) { Advent._aCache = Just "." }

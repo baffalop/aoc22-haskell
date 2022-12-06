@@ -17,6 +17,7 @@ import qualified Day05
 import qualified Day06
 import Control.Exception (catch, IOException)
 
+type Solution = Text -> Either String (String, String)
 newtype SessionKey = Key String
 
 main :: IO ()
@@ -35,15 +36,21 @@ main = do
       putStrLn $ "Part 1: " <> sol1
       putStrLn $ "Part 2: " <> sol2
 
-getSolution :: Day -> Text -> Either String (String, String)
+getSolution :: Day -> Solution
 getSolution day = case dayInt day of
-  1 -> Right . both show . (Day01.solve1 &&& Day01.solve2) . Day01.parse
-  2 -> fmap (both show. (Day02.solve1 &&& Day02.solve2)) . Day02.parse
-  3 -> Right . both show . (Day03.solve1 &&& Day03.solve2) . Day03.parse
-  4 -> fmap (both show . (Day04.solve1 &&& Day04.solve2)) . Day04.parse
-  5 -> fmap (Day05.solve1 &&& Day05.solve2) . Day05.parse
-  6 -> Right . both show . (Day06.solve1 &&& Day06.solve2) . Day06.parse
+  1 -> simpleSolution Day01.parse Day01.solve1 Day01.solve2
+  2 -> eitherSolution Day02.parse Day02.solve1 Day02.solve2
+  3 -> simpleSolution Day03.parse Day03.solve1 Day03.solve2
+  4 -> eitherSolution Day04.parse Day04.solve1 Day04.solve2
+  5 -> eitherSolution Day05.parse Day05.solve1 Day05.solve2
+  6 -> simpleSolution Day06.parse Day06.solve1 Day06.solve2
   d -> error $ "No solution for day " <> show d <> " yet"
+
+simpleSolution :: Show b => (Text -> a) -> (a -> b) -> (a -> b) -> Solution
+simpleSolution parse = eitherSolution $ Right . parse
+
+eitherSolution :: Show b => (Text -> Either String a) -> (a -> b) -> (a -> b) -> Solution
+eitherSolution parse solve1 solve2 = fmap (both show . (solve1 &&& solve2)) . parse
 
 cli :: Opt.ParserInfo Day
 cli =

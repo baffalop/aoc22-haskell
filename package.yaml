@@ -17,6 +17,7 @@ dependencies:
   - text
   - extra
   - attoparsec
+  - optparse-applicative
 
 default-extensions:
 - OverloadedStrings

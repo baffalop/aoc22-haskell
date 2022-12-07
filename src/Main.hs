@@ -72,19 +72,17 @@ eitherSolution parse solve1 solve2 = fmap answer . parse
 
 cli :: Opt.ParserInfo Options
 cli =
-  Opt.info (Opt.helper <*> (Options <$> dayArg <*> parseOpt)) $
-    Opt.fullDesc
-      <> Opt.header "Solutions to Advent of Code 2021"
-      <> Opt.progDesc "Run solution(s) for the AoC puzzle of the given day"
+  Opt.info (Opt.helper <*> opts) $ Opt.fullDesc
+    <> Opt.header "Solutions to Advent of Code 2021"
+    <> Opt.progDesc "Run solution(s) for the AoC puzzle of the given day"
   where
-    dayArg :: Opt.Parser Day
-    dayArg = Opt.argument day $ Opt.metavar "DAY" <> Opt.help "Which day's solution to run"
+    opts :: Opt.Parser Options
+    opts = Options
+      <$> Opt.argument readDay (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
+      <*> Opt.switch (Opt.short 'o' <> Opt.long "parse-only" <> Opt.help "Only output the parsed input")
 
-    parseOpt :: Opt.Parser Bool
-    parseOpt = Opt.switch $ Opt.short 'o' <> Opt.long "parse-only" <> Opt.help "Only output the parsed input"
-
-    day :: Opt.ReadM Day
-    day = Opt.eitherReader $ \s ->
+    readDay :: Opt.ReadM Day
+    readDay = Opt.eitherReader $ \s ->
       let err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
       in maybeToEither err $ mkDay =<< readMaybe s
 

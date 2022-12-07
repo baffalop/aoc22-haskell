@@ -25,6 +25,7 @@ default-extensions:
 - NamedFieldPuns
 - TupleSections
 - LambdaCase
+- RecordWildCards
 
 ghc-options:
 - -Wall

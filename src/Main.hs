@@ -6,8 +6,7 @@ import Advent (Day, mkDay, dayInt)
 import Data.Text (Text)
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
-import Control.Arrow ((&&&))
-import Data.Tuple.Extra (both)
+import Control.Exception (catch, IOException)
 
 import qualified Day01
 import qualified Day02
@@ -15,14 +14,24 @@ import qualified Day03
 import qualified Day04
 import qualified Day05
 import qualified Day06
-import Control.Exception (catch, IOException)
 
-type Solution = Text -> Either String (String, String)
 newtype SessionKey = Key String
+type Solution = Text -> Either String Answer
+
+data Options = Options
+  { day :: Day
+  , parseOnly :: Bool
+  }
+
+data Answer = Answer
+  { parsed :: String
+  , part1 :: String
+  , part2 :: String
+  }
 
 main :: IO ()
 main = do
-  day <- Opt.execParser cli
+  Options{ day, parseOnly } <- Opt.execParser cli
   key <- Key <$> readFile ".key" `catch` \e ->
     let _ = e :: IOException in
     fail "Ensure you've got the AoC session key in a `.key` file"
@@ -31,9 +40,13 @@ main = do
   case solve day input of
     Left err ->
       putStrLn $ "Parse error: " <> err
-    Right (sol1, sol2) -> do
-      putStrLn $ "Part 1: " <> sol1
-      putStrLn $ "Part 2: " <> sol2
+    Right Answer{..} ->
+      if parseOnly then do
+        putStrLn "Parsed input:"
+        putStrLn parsed
+      else do
+        putStrLn $ "Part 1: " <> part1
+        putStrLn $ "Part 2: " <> part2
 
 solve :: Day -> Solution
 solve day = case dayInt day of
@@ -45,21 +58,30 @@ solve day = case dayInt day of
   6 -> simpleSolution Day06.parse Day06.solve1 Day06.solve2
   d -> error $ "No solution for day " <> show d <> " yet"
 
-simpleSolution :: Show b => (Text -> a) -> (a -> b) -> (a -> b) -> Solution
+simpleSolution :: (Show a, Show b) => (Text -> a) -> (a -> b) -> (a -> b) -> Solution
 simpleSolution parse = eitherSolution $ Right . parse
 
-eitherSolution :: Show b => (Text -> Either String a) -> (a -> b) -> (a -> b) -> Solution
-eitherSolution parse solve1 solve2 = fmap (both show . (solve1 &&& solve2)) . parse
+eitherSolution :: (Show a, Show b) => (Text -> Either String a) -> (a -> b) -> (a -> b) -> Solution
+eitherSolution parse solve1 solve2 = fmap answer . parse
+  where
+    answer parsed = Answer
+      { parsed = show parsed
+      , part1 = show $ solve1 parsed
+      , part2 = show $ solve2 parsed
+      }
 
-cli :: Opt.ParserInfo Day
+cli :: Opt.ParserInfo Options
 cli =
-  Opt.info (Opt.helper <*> dayArg) $
+  Opt.info (Opt.helper <*> (Options <$> dayArg <*> parseOpt)) $
     Opt.fullDesc
       <> Opt.header "Solutions to Advent of Code 2021"
       <> Opt.progDesc "Run solution(s) for the AoC puzzle of the given day"
   where
     dayArg :: Opt.Parser Day
     dayArg = Opt.argument day $ Opt.metavar "DAY" <> Opt.help "Which day's solution to run"
+
+    parseOpt :: Opt.Parser Bool
+    parseOpt = Opt.switch $ Opt.short 'o' <> Opt.long "parse-only" <> Opt.help "Only output the parsed input"
 
     day :: Opt.ReadM Day
     day = Opt.eitherReader $ \s ->

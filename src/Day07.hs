@@ -7,6 +7,7 @@ import Parsing (linesOf, word, alphaWord)
 import Control.Applicative ((<|>))
 import Data.Maybe (catMaybes)
 import Data.List (sort)
+import Utils ((<.>))
 
 type FS = [FsItem]
 
@@ -29,8 +30,8 @@ parse = P.parseOnly recursedDir
       <* (() <$ P.string "$ cd .." <|> P.endOfInput)
 
     fs :: Parser FS
-    fs = fmap catMaybes . linesOf $ P.choice
-      [ fmap Just . File <$> P.decimal <* P.char ' ' <*> word
+    fs = catMaybes <.> linesOf $ P.choice
+      [ Just <.> File <$> P.decimal <* P.char ' ' <*> word
       , Nothing <$ P.string "dir " <* alphaWord
       , Just <$> recursedDir
       ]

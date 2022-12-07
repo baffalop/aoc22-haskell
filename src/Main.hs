@@ -2,7 +2,7 @@ module Main (main) where
 
 import qualified Options.Applicative as Opt
 import qualified Advent
-import Advent (Day, dayInt)
+import Advent (Day, mkDay, dayInt)
 import Data.Text (Text)
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
@@ -26,18 +26,17 @@ main = do
   key <- Key <$> readFile ".key" `catch` \e ->
     let _ = e :: IOException in
     fail "Ensure you've got the AoC session key in a `.key` file"
-  input <- fetchInput day key
 
-  let solve = getSolution day
-  case solve input of
+  input <- fetchInput day key
+  case solve day input of
     Left err ->
       putStrLn $ "Parse error: " <> err
     Right (sol1, sol2) -> do
       putStrLn $ "Part 1: " <> sol1
       putStrLn $ "Part 2: " <> sol2
 
-getSolution :: Day -> Solution
-getSolution day = case dayInt day of
+solve :: Day -> Solution
+solve day = case dayInt day of
   1 -> simpleSolution Day01.parse Day01.solve1 Day01.solve2
   2 -> eitherSolution Day02.parse Day02.solve1 Day02.solve2
   3 -> simpleSolution Day03.parse Day03.solve1 Day03.solve2
@@ -65,7 +64,7 @@ cli =
     day :: Opt.ReadM Day
     day = Opt.eitherReader $ \s ->
       let err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
-      in maybeToEither err $ Advent.mkDay =<< readMaybe s
+      in maybeToEither err $ mkDay =<< readMaybe s
 
 fetchInput :: Day -> SessionKey -> IO Text
 fetchInput day key = do

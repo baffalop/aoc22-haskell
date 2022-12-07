@@ -36,14 +36,19 @@ parse = P.parseOnly $ id
     recursedDir = mkDir
       <$ P.string "$ cd " <*> alphaWord <* P.endOfLine
       <* P.string "$ ls" <* P.endOfLine
-      <*> fs <* P.endOfLine
+      <*> fs <* (P.endOfLine <|> P.endOfInput)
       <* (() <$ P.string "$ cd .." <|> P.endOfInput)
 
 solve1 :: FS -> Int
-solve1 = undefined
+solve1 = sum . filter (<= 100000) . dirSizes
 
 solve2 :: FS -> Int
 solve2 = undefined
+
+dirSizes :: FS -> [Size]
+dirSizes = concatMap $ \case
+  (File _ _) -> [0]
+  (Dir size _ fs) -> size : dirSizes fs
 
 mkDir :: Name -> FS -> FsItem
 mkDir name fs = Dir (sum $ sizeOf <$> fs) name fs

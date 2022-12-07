@@ -45,9 +45,8 @@ solve1 :: FsItem -> Int
 solve1 = sum . filter (<= 100000) . dirSizes
 
 solve2 :: FsItem -> Int
-solve2 fs =
-  let requireFreed = 30000000 - (70000000 - sizeOf fs) in
-  head $ filter (>= requireFreed) $ sort $ dirSizes fs
+solve2 fs = head $ filter (>= requireFreed) $ sort $ dirSizes fs
+  where requireFreed = 30000000 - (70000000 - sizeOf fs)
 
 dirSizes :: FsItem -> [Size]
 dirSizes (File _ _) = []

@@ -50,9 +50,8 @@ solve2 fs =
   head $ filter (>= requireFreed) $ sort $ dirSizes fs
 
 dirSizes :: FsItem -> [Size]
-dirSizes = \case
-  (File _ _) -> [0]
-  (Dir size _ fs) -> size : foldMap dirSizes fs
+dirSizes (File _ _) = []
+dirSizes (Dir size _ fs) = size : foldMap dirSizes fs
 
 mkDir :: Name -> FS -> FsItem
 mkDir name fs = Dir (sum $ sizeOf <$> fs) name fs

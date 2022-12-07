@@ -11,8 +11,15 @@ import Data.List (sort)
 type FS = [FsItem]
 
 data FsItem
-  = File !Size !Name
-  | Dir !Size !Name FS
+  = File
+    { size :: !Size
+    , name :: !Name
+    }
+  | Dir
+    { size :: !Size
+    , name :: !Name
+    , contents :: FS
+    }
   deriving (Show)
 
 type Size = Int
@@ -46,15 +53,11 @@ solve1 = sum . filter (<= 100000) . dirSizes
 
 solve2 :: FsItem -> Int
 solve2 fs = head $ filter (>= requireFreed) $ sort $ dirSizes fs
-  where requireFreed = 30000000 - (70000000 - sizeOf fs)
+  where requireFreed = 30000000 - (70000000 - size fs)
 
 dirSizes :: FsItem -> [Size]
-dirSizes (File _ _) = []
-dirSizes (Dir size _ fs) = size : foldMap dirSizes fs
+dirSizes File{} = []
+dirSizes Dir{ size, contents } = size : foldMap dirSizes contents
 
 mkDir :: Name -> FS -> FsItem
-mkDir name fs = Dir (sum $ sizeOf <$> fs) name fs
-
-sizeOf :: FsItem -> Size
-sizeOf (File size _) = size
-sizeOf (Dir size _ _) = size
+mkDir name contents = Dir (sum $ size <$> contents) name contents

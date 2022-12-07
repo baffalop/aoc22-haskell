@@ -9,7 +9,6 @@ import Parsing (linesOf)
 import Data.Maybe (catMaybes, fromMaybe)
 import Safe (headMay)
 import Data.List (transpose)
-import Control.Applicative ((<|>))
 import Data.Foldable (foldl', toList)
 
 data Input = Input
@@ -35,9 +34,10 @@ parse = P.parseOnly $ Input
     stacks = Seq.fromList . fmap catMaybes . transpose <$> linesOf (crate `P.sepBy` P.char ' ')
 
     crate :: Parser (Maybe Char)
-    crate =
-      Just <$ P.char '[' <*> P.letter <* P.char ']'
-      <|> Nothing <$ P.string "   "
+    crate = P.choice
+      [ Just <$ P.char '[' <*> P.letter <* P.char ']'
+      , Nothing <$ P.string "   "
+      ]
 
     indices :: Parser [Int]
     indices = P.decimal `P.sepBy` P.skipSpace

@@ -35,6 +35,7 @@ executable aoc22-haskell
       NamedFieldPuns
       TupleSections
       LambdaCase
+      ViewPatterns
       RecordWildCards
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:

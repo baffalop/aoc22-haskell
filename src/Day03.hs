@@ -18,9 +18,9 @@ priorities :: String -> Int
 priorities = sum . fmap priority
 
 priority :: Char -> Int
-priority c =
-  let code = ord c in
-  if code > 96 then code - 96 else code - 38
+priority (ord -> code)
+  | code > 96 = code - 96
+  | otherwise = code - 38
 
 halves :: [a] -> ([a], [a])
 halves xs = splitAt (length xs `div` 2) xs

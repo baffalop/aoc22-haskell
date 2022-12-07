@@ -21,22 +21,23 @@ dependencies:
   - advent-of-code-api
 
 default-extensions:
-- OverloadedStrings
-- NamedFieldPuns
-- TupleSections
-- LambdaCase
-- RecordWildCards
+  - OverloadedStrings
+  - NamedFieldPuns
+  - TupleSections
+  - LambdaCase
+  - ViewPatterns
+  - RecordWildCards
 
 ghc-options:
-- -Wall
-- -Wcompat
-- -Widentities
-- -Wincomplete-record-updates
-- -Wincomplete-uni-patterns
-- -Wmissing-export-lists
-- -Wmissing-home-modules
-- -Wpartial-fields
-- -Wredundant-constraints
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wmissing-export-lists
+  - -Wmissing-home-modules
+  - -Wpartial-fields
+  - -Wredundant-constraints
 
 executables:
   aoc22-haskell:

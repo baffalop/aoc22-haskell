@@ -6,6 +6,7 @@ import Data.Attoparsec.Text (Parser)
 import Parsing (linesOf, word, alphaWord)
 import Control.Applicative ((<|>))
 import Data.Maybe (catMaybes)
+import Data.List (sort)
 
 type FS = [FsItem]
 
@@ -17,8 +18,8 @@ data FsItem
 type Size = Int
 type Name = Text
 
-parse :: Text -> Either String FS
-parse = P.parseOnly $ id
+parse :: Text -> Either String FsItem
+parse = P.parseOnly $ mkDir "/"
   <$ P.string "$ cd /" <* P.endOfLine <* P.string "$ ls" <* P.endOfLine
   <*> fs
   where
@@ -39,16 +40,18 @@ parse = P.parseOnly $ id
       <*> fs <* (P.endOfLine <|> P.endOfInput)
       <* (() <$ P.string "$ cd .." <|> P.endOfInput)
 
-solve1 :: FS -> Int
+solve1 :: FsItem -> Int
 solve1 = sum . filter (<= 100000) . dirSizes
 
-solve2 :: FS -> Int
-solve2 = undefined
+solve2 :: FsItem -> Int
+solve2 fs =
+  let requireFreed = 30000000 - (70000000 - sizeOf fs) in
+  head $ filter (>= requireFreed) $ sort $ dirSizes fs
 
-dirSizes :: FS -> [Size]
-dirSizes = concatMap $ \case
+dirSizes :: FsItem -> [Size]
+dirSizes = \case
   (File _ _) -> [0]
-  (Dir size _ fs) -> size : dirSizes fs
+  (Dir size _ fs) -> size : concatMap dirSizes fs
 
 mkDir :: Name -> FS -> FsItem
 mkDir name fs = Dir (sum $ sizeOf <$> fs) name fs

@@ -6,6 +6,7 @@ import Advent (Day, mkDay, dayInt)
 import Data.Text (Text)
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
+import Control.Monad (when)
 import Control.Exception (catch, IOException)
 
 import qualified Day01
@@ -21,7 +22,7 @@ type Solution = Text -> Either String Answer
 
 data Options = Options
   { day :: Day
-  , parseOnly :: Bool
+  , showParsed :: Bool
   }
 
 data Answer = Answer
@@ -32,7 +33,7 @@ data Answer = Answer
 
 main :: IO ()
 main = do
-  Options{ day, parseOnly } <- Opt.execParser cli
+  Options{ day, showParsed } <- Opt.execParser cli
   key <- Key <$> readFile ".key" `catch` \e ->
     let _ = e :: IOException in
     fail "Ensure you've got the AoC session key in a `.key` file"
@@ -41,13 +42,12 @@ main = do
   case solve day input of
     Left err ->
       putStrLn $ "Parse error: " <> err
-    Right Answer{..} ->
-      if parseOnly then do
+    Right Answer{..} -> do
+      when showParsed $ do
         putStrLn "Parsed input:"
         putStrLn parsed
-      else do
-        putStrLn $ "Part 1: " <> part1
-        putStrLn $ "Part 2: " <> part2
+      putStrLn $ "Part 1: " <> part1
+      putStrLn $ "Part 2: " <> part2
 
 solve :: Day -> Solution
 solve day = case dayInt day of
@@ -81,7 +81,7 @@ cli =
     opts :: Opt.Parser Options
     opts = Options
       <$> Opt.argument readDay (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
-      <*> Opt.switch (Opt.short 'o' <> Opt.long "parse-only" <> Opt.help "Only output the parsed input")
+      <*> Opt.switch (Opt.short 's' <> Opt.long "show-parsed" <> Opt.help "Show the parsed input")
 
     readDay :: Opt.ReadM Day
     readDay = Opt.eitherReader $ \s ->

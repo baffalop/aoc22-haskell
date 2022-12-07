@@ -29,14 +29,11 @@ parse = P.parseOnly recursedDir
       <* (() <$ P.string "$ cd .." <|> P.endOfInput)
 
     fs :: Parser FS
-    fs = catMaybes <$>
-      linesOf (Just <$> file <|> Nothing <$ listedDir <|> Just <$> recursedDir)
-
-    file :: Parser FsItem
-    file = File <$> P.decimal <* P.char ' ' <*> word
-
-    listedDir :: Parser ()
-    listedDir = () <$ P.string "dir " <* alphaWord
+    fs = fmap catMaybes . linesOf $ P.choice
+      [ fmap Just . File <$> P.decimal <* P.char ' ' <*> word
+      , Nothing <$ P.string "dir " <* alphaWord
+      , Just <$> recursedDir
+      ]
 
     dirname :: Parser Text
     dirname = P.string "/" <|> alphaWord

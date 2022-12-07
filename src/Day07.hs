@@ -6,7 +6,6 @@ import Data.Attoparsec.Text (Parser)
 import Parsing (linesOf, word, alphaWord)
 import Control.Applicative ((<|>))
 import Data.Maybe (catMaybes)
-import Data.List (sort)
 import Utils ((<.>))
 
 type FS = [FsItem]
@@ -43,7 +42,7 @@ solve1 :: FsItem -> Int
 solve1 = sum . filter (<= 100000) . dirSizes
 
 solve2 :: FsItem -> Int
-solve2 fs = head $ filter (>= requireFreed) $ sort $ dirSizes fs
+solve2 fs = minimum $ filter (>= requireFreed) $ dirSizes fs
   where requireFreed = 30000000 - (70000000 - sizeOf fs)
 
 dirSizes :: FsItem -> [Size]

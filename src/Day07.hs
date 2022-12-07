@@ -19,10 +19,15 @@ type Size = Int
 type Name = Text
 
 parse :: Text -> Either String FsItem
-parse = P.parseOnly $ mkDir "/"
-  <$ P.string "$ cd /" <* P.endOfLine <* P.string "$ ls" <* P.endOfLine
-  <*> fs
+parse = P.parseOnly recursedDir
   where
+    recursedDir :: Parser FsItem
+    recursedDir = mkDir
+      <$ P.string "$ cd " <*> dirname <* P.endOfLine
+      <* P.string "$ ls" <* P.endOfLine
+      <*> fs <* (P.endOfLine <|> P.endOfInput)
+      <* (() <$ P.string "$ cd .." <|> P.endOfInput)
+
     fs :: Parser FS
     fs = catMaybes <$>
       linesOf (Just <$> file <|> Nothing <$ listedDir <|> Just <$> recursedDir)
@@ -33,12 +38,8 @@ parse = P.parseOnly $ mkDir "/"
     listedDir :: Parser ()
     listedDir = () <$ P.string "dir " <* alphaWord
 
-    recursedDir :: Parser FsItem
-    recursedDir = mkDir
-      <$ P.string "$ cd " <*> alphaWord <* P.endOfLine
-      <* P.string "$ ls" <* P.endOfLine
-      <*> fs <* (P.endOfLine <|> P.endOfInput)
-      <* (() <$ P.string "$ cd .." <|> P.endOfInput)
+    dirname :: Parser Text
+    dirname = P.string "/" <|> alphaWord
 
 solve1 :: FsItem -> Int
 solve1 = sum . filter (<= 100000) . dirSizes

@@ -3,7 +3,6 @@ module Day08 (parse, solve1, solve2) where
 import Data.Text (Text, unpack)
 import Data.List (transpose)
 import Utils ((<.>))
-import Control.Applicative (liftA2)
 import Data.Tuple.Extra (both)
 import Data.Function (on)
 
@@ -22,7 +21,7 @@ solve2 :: Input -> Output
 solve2 = undefined
 
 mapVisibleBothSides :: [Int] -> [Bool]
-mapVisibleBothSides = liftA2 ((zipWith (||) . reverse) `on` mapVisible) reverse id
+mapVisibleBothSides = ((zipWith (||) . reverse) `on` mapVisible) <$> reverse <*> id
 
 mapVisible :: [Int] -> [Bool]
 mapVisible heights = zipWith (>) heights $ scanl max (-1) heights

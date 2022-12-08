@@ -31,13 +31,14 @@ solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid
     grid = Mx.fromLists input
 
 views :: (Int, Int) -> Matrix a -> [[a]]
-views (row, col) grid = toList <$>
-  [ V.slice 0 row $ Mx.getCol col grid
-  , V.drop 1 $ V.slice row (size - row) $ Mx.getCol col grid
-  , V.slice 0 col $ Mx.getRow row grid
-  , V.drop 1 $ V.slice col (size - col) $ Mx.getRow row grid
+views (x, y) grid = toList <$>
+  [ V.reverse $ V.slice 0 (y - 1) row
+  , V.slice y (size - y) row
+  , V.reverse $ V.slice 0 (x - 1) col
+  , V.slice x (size - x) col
   ]
   where
+    (row, col) = both ($ grid) (Mx.getRow x, Mx.getCol y)
     size = Mx.nrows grid
 
 countVisibleFrom :: Int -> [Int] -> Int

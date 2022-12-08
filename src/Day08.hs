@@ -23,6 +23,12 @@ solve1 grid = sum $ length . filter id <$> zipWith (zipWith (||)) verts (transpo
   where
     (hors, verts) = both (fmap mapVisibleBothSides) (grid, transpose grid)
 
+mapVisibleBothSides :: [Int] -> [Bool]
+mapVisibleBothSides = ((zipWith (||) . reverse) `on` mapVisible) <$> reverse <*> id
+
+mapVisible :: [Int] -> [Bool]
+mapVisible heights = zipWith (>) heights $ scanl max (-1) heights
+
 solve2 :: Input -> Output
 solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid
   where
@@ -31,6 +37,9 @@ solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid
 
     grid :: Matrix Int
     grid = Mx.fromLists input
+
+countVisibleFrom :: Int -> [Int] -> Int
+countVisibleFrom height trees = maybe (length trees) (+ 1) $ findIndex (>= height) trees
 
 viewsFrom :: forall a . (Int, Int) -> Matrix a -> [[a]]
 viewsFrom (x, y) grid = toList <$>
@@ -43,12 +52,3 @@ viewsFrom (x, y) grid = toList <$>
     row, col :: V.Vector a
     (row, col) = both ($ grid) (Mx.getRow x, Mx.getCol y)
     size = Mx.nrows grid
-
-countVisibleFrom :: Int -> [Int] -> Int
-countVisibleFrom viewpoint trees = maybe (length trees) (+ 1) $ findIndex (>= viewpoint) trees
-
-mapVisibleBothSides :: [Int] -> [Bool]
-mapVisibleBothSides = ((zipWith (||) . reverse) `on` mapVisible) <$> reverse <*> id
-
-mapVisible :: [Int] -> [Bool]
-mapVisible heights = zipWith (>) heights $ scanl max (-1) heights

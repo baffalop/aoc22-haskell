@@ -46,7 +46,9 @@ executable aoc22-haskell
     , base >=4.7 && <5
     , containers
     , extra
+    , matrix
     , optparse-applicative
     , safe
     , text
+    , vector
   default-language: Haskell2010

@@ -16,6 +16,8 @@ dependencies:
   - safe
   - text
   - extra
+  - matrix
+  - vector
   - attoparsec
   - optparse-applicative
   - advent-of-code-api

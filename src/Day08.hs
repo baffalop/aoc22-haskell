@@ -1,4 +1,6 @@
-module Day08 (parse, solve1, solve2, countVisibleFrom, views) where
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module Day08 (parse, solve1, solve2) where
 
 import Data.Text (Text, unpack)
 import Data.Matrix (Matrix)
@@ -25,19 +27,20 @@ solve2 :: Input -> Output
 solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid
   where
     scenicScore :: (Int, Int) -> Int -> Int
-    scenicScore pos tree = product $ countVisibleFrom tree <$> views pos grid
+    scenicScore pos tree = product $ countVisibleFrom tree <$> viewsFrom pos grid
 
     grid :: Matrix Int
     grid = Mx.fromLists input
 
-views :: (Int, Int) -> Matrix a -> [[a]]
-views (x, y) grid = toList <$>
+viewsFrom :: forall a . (Int, Int) -> Matrix a -> [[a]]
+viewsFrom (x, y) grid = toList <$>
   [ V.reverse $ V.slice 0 (y - 1) row
   , V.slice y (size - y) row
   , V.reverse $ V.slice 0 (x - 1) col
   , V.slice x (size - x) col
   ]
   where
+    row, col :: V.Vector a
     (row, col) = both ($ grid) (Mx.getRow x, Mx.getCol y)
     size = Mx.nrows grid
 

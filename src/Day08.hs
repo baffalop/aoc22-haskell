@@ -27,7 +27,7 @@ mapVisibleBothSides :: [Int] -> [Bool]
 mapVisibleBothSides = ((zipWith (||) . reverse) `on` mapVisible) <$> reverse <*> id
 
 mapVisible :: [Int] -> [Bool]
-mapVisible heights = zipWith (>) heights $ scanl max (-1) heights
+mapVisible = zipWith (>) <$> id <*> scanl max (-1)
 
 solve2 :: Input -> Output
 solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid

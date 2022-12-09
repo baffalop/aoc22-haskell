@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Day08 (parse, solve1, solve2) where
 
 import Data.Text (Text, unpack)
@@ -41,14 +39,12 @@ solve2 input = maximum . Mx.toList . Mx.mapPos scenicScore $ grid
 countVisibleFrom :: Int -> [Int] -> Int
 countVisibleFrom height trees = maybe (length trees) (+ 1) $ findIndex (>= height) trees
 
-viewsFrom :: forall a . (Int, Int) -> Matrix a -> [[a]]
-viewsFrom (x, y) grid = toList <$>
-  [ V.reverse $ V.slice 0 (y - 1) row
-  , V.slice y (size - y) row
-  , V.reverse $ V.slice 0 (x - 1) col
-  , V.slice x (size - x) col
-  ]
-  where
-    row, col :: V.Vector a
-    (row, col) = both ($ grid) (Mx.getRow x, Mx.getCol y)
-    size = Mx.nrows grid
+viewsFrom :: (Int, Int) -> Matrix a -> [[a]]
+viewsFrom (x, y) grid =
+  flip foldMap
+    [(y, Mx.getRow x grid), (x, Mx.getCol y grid)]
+    \(i, vector) -> toList <$>
+      [ V.reverse $ V.slice 0 (i - 1) vector
+      , V.slice i (size - i) vector
+      ]
+  where size = Mx.nrows grid

@@ -39,6 +39,7 @@ executable aoc22-haskell
       LambdaCase
       ViewPatterns
       RecordWildCards
+      BlockArguments
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       advent-of-code-api

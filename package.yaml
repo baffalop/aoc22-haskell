@@ -29,6 +29,7 @@ default-extensions:
   - LambdaCase
   - ViewPatterns
   - RecordWildCards
+  - BlockArguments
 
 ghc-options:
   - -Wall

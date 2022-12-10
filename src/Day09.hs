@@ -2,13 +2,12 @@ module Day09 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
+import Parsing (linesOf)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Control.Monad (join)
 import Data.Foldable (foldl')
 import Data.Tuple.Extra (both)
-import Data.Function ((&))
-import Parsing (linesOf)
 
 newtype Vec = Vec (Int, Int) deriving (Show, Eq)
 newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
@@ -28,30 +27,25 @@ parse = P.parseOnly $ join <$> linesOf move
       <* P.space <*> P.decimal
 
 solve1 :: Input -> Int
-solve1 = solveFor 2
+solve1 = moveRopeOfLength 2
 
 solve2 :: Input -> Int
-solve2 = solveFor 10
+solve2 = moveRopeOfLength 10
 
-solveFor :: Int -> Input -> Int
-solveFor ropeLength = Set.size . snd . foldl' applyMove initial
+moveRopeOfLength :: Int -> Input -> Int
+moveRopeOfLength ropeLength = Set.size . snd . foldl' (flip applyMove) initial
   where
-    applyMove :: ([Pos], Set Pos) -> Vec -> ([Pos], Set Pos)
-    applyMove (rope, trail) move =
-      let moved = moveRope move rope in
-      (moved, Set.insert (last moved) trail)
+    applyMove :: Vec -> ([Pos], Set Pos) -> ([Pos], Set Pos)
+    applyMove move (moveRope move -> rope, trail) = (rope, Set.insert (last rope) trail)
 
     initial :: ([Pos], Set Pos)
     initial = (replicate ropeLength origin, Set.singleton origin)
 
 moveRope :: Vec -> [Pos] -> [Pos]
 moveRope v = \case
-  (head:tail@(neck:_)) ->
-    let
-      newHead = head & moveBy v
-      nextMove = neck `follow` newHead
-    in
-    newHead : if nextMove == zero then tail else moveRope nextMove tail
+  ((moveBy v -> head):tail@(neck:_)) ->
+    let nextMove = neck `follow` head in
+    head : if nextMove == zero then tail else moveRope nextMove tail
   rope -> moveBy v <$> rope
 
 follow :: Pos -> Pos -> Vec

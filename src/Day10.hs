@@ -34,7 +34,7 @@ solve2 = render . (draw <.> chunksOf 40) . signals
 
 draw :: [Int] -> [Pixel]
 draw = zip [0..] >>> fmap \(pos, sig) ->
-  if pos `elem` [sig - 1, sig + 1] then White else Black
+  if pos `elem` [sig - 1 .. sig + 1] then White else Black
 
 signals :: [Maybe Int] -> [Int]
 signals = scanl (flip $ maybe id (+)) 1

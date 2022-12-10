@@ -24,7 +24,7 @@ signalStrengths :: [Maybe Int] -> [Int]
 signalStrengths = zipWith (*) [1..] . signals
 
 signals :: [Maybe Int] -> [Int]
-signals = scanl (flip $ maybe id (+)) 0
+signals = scanl (flip $ maybe id (+)) 1
 
 nthEvery :: Int -> Int -> [a] -> [a]
 nthEvery start n = snd <.> filter (\(i, _) -> (i + start) `mod` n == 0) . zip [1..]

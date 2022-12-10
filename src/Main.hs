@@ -18,6 +18,7 @@ import qualified Day06
 import qualified Day07
 import qualified Day08
 import qualified Day09
+import qualified Day10
 
 newtype SessionKey = Key String
 type Solution = Text -> Either String Answer
@@ -53,15 +54,16 @@ main = do
 
 solve :: Day -> Solution
 solve day = case dayInt day of
-  1 -> simpleSolution Day01.parse Day01.solve1 Day01.solve2
-  2 -> eitherSolution Day02.parse Day02.solve1 Day02.solve2
-  3 -> simpleSolution Day03.parse Day03.solve1 Day03.solve2
-  4 -> eitherSolution Day04.parse Day04.solve1 Day04.solve2
-  5 -> eitherSolution Day05.parse Day05.solve1 Day05.solve2
-  6 -> simpleSolution Day06.parse Day06.solve1 Day06.solve2
-  7 -> eitherSolution Day07.parse Day07.solve1 Day07.solve2
-  8 -> simpleSolution Day08.parse Day08.solve1 Day08.solve2
-  9 -> eitherSolution Day09.parse Day09.solve1 Day09.solve2
+  1  -> simpleSolution Day01.parse Day01.solve1 Day01.solve2
+  2  -> eitherSolution Day02.parse Day02.solve1 Day02.solve2
+  3  -> simpleSolution Day03.parse Day03.solve1 Day03.solve2
+  4  -> eitherSolution Day04.parse Day04.solve1 Day04.solve2
+  5  -> eitherSolution Day05.parse Day05.solve1 Day05.solve2
+  6  -> simpleSolution Day06.parse Day06.solve1 Day06.solve2
+  7  -> eitherSolution Day07.parse Day07.solve1 Day07.solve2
+  8  -> simpleSolution Day08.parse Day08.solve1 Day08.solve2
+  9  -> eitherSolution Day09.parse Day09.solve1 Day09.solve2
+  10 -> eitherSolution Day10.parse Day10.solve1 Day10.solve2
   d -> error $ "No solution for day " <> show d <> " yet"
 
 simpleSolution :: (Show a, Show b) => (Text -> a) -> (a -> b) -> (a -> b) -> Solution

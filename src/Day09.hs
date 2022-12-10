@@ -37,7 +37,7 @@ moveRopeOfLength :: Int -> Input -> Int
 moveRopeOfLength ropeLength = Set.size . snd . foldl' (flip applyMove) initial
   where
     applyMove :: Vec -> ([Pos], Set Pos) -> ([Pos], Set Pos)
-    applyMove move (moveRope move -> rope, trail) = (rope, Set.insert (last rope) trail)
+    applyMove v (moveRope v -> rope, trail) = (rope, Set.insert (last rope) trail)
 
     initial :: ([Pos], Set Pos)
     initial = (replicate ropeLength origin, Set.singleton origin)

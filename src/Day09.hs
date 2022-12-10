@@ -1,15 +1,14 @@
 module Day09 (parse, solve1, solve2) where
 
-import Data.Text (Text, unpack)
-import Safe (readMay)
-import Data.Either.Extra (maybeToEither)
+import Data.Text (Text)
+import qualified Data.Attoparsec.Text as P
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Control.Monad (join)
 import Data.Foldable (foldl')
 import Data.Tuple.Extra (both)
 import Data.Function ((&))
-import Utils ((<.>))
+import Parsing (linesOf)
 
 newtype Vec = Vec (Int, Int) deriving (Show, Eq)
 newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
@@ -17,19 +16,16 @@ newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
 type Input = [Vec]
 
 parse :: Text -> Either String Input
-parse = join <.> traverse parseMove . lines . unpack
+parse = P.parseOnly $ join <$> linesOf move
   where
-    parseMove :: String -> Either String [Vec]
-    parseMove (words -> [dir, countStr]) = do
-      count <- readMay countStr & maybeToEither ("Not an int: " <> countStr)
-      vec <- case dir of
-        "R" -> Right $ Vec (1, 0)
-        "L" -> Right $ Vec (-1, 0)
-        "U" -> Right $ Vec (0, 1)
-        "D" -> Right $ Vec (0, -1)
-        d -> Left $ "Not a direction: " <> d
-      pure $ replicate count vec
-    parseMove str = Left $ "Not two words: " <> str
+    move :: P.Parser [Vec]
+    move = flip replicate <$> P.choice
+      [ Vec (1, 0) <$ P.char 'R'
+      , Vec (-1, 0) <$ P.char 'L'
+      , Vec (0, 1) <$ P.char 'U'
+      , Vec (0, -1) <$ P.char 'D'
+      ]
+      <* P.space <*> P.decimal
 
 solve1 :: Input -> Int
 solve1 = solveFor 2

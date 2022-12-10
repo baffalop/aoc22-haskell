@@ -2,7 +2,7 @@ module Day10 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
-import Parsing (linesOf, negatable)
+import Parsing (linesOf)
 import Control.Monad (join)
 import Data.List.Extra (chunksOf)
 import Utils ((<.>))
@@ -20,7 +20,7 @@ instance Show Pixel where
 parse :: Text -> Either String Input
 parse = P.parseOnly $ join <.> linesOf $ P.choice
   [ [Nothing] <$ P.string "noop"
-  , (Nothing :) . (: []) . Just <$ P.string "addx " <*> negatable
+  , (Nothing :) . (: []) . Just <$ P.string "addx " <*> P.signed P.decimal
   ]
 
 solve1 :: Input -> Int

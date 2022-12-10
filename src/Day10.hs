@@ -1,9 +1,10 @@
-module Day10 (parse, solve1, solve2, nthEvery, signals, signalStrengths) where
+module Day10 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
 import Parsing (linesOf, negatable)
 import Control.Monad (join)
+import Data.List.Extra (chunksOf)
 import Utils ((<.>))
 
 type Input = [Maybe Int]
@@ -15,7 +16,7 @@ parse = P.parseOnly $ join <.> linesOf $ P.choice
   ]
 
 solve1 :: Input -> Int
-solve1 = sum . nthEvery 20 40 . signalStrengths
+solve1 = sum . (head <.> chunksOf 40) . drop 19 . signalStrengths
 
 solve2 :: Input -> Int
 solve2 = undefined
@@ -25,6 +26,3 @@ signalStrengths = zipWith (*) [1..] . signals
 
 signals :: [Maybe Int] -> [Int]
 signals = scanl (flip $ maybe id (+)) 1
-
-nthEvery :: Int -> Int -> [a] -> [a]
-nthEvery start n = snd <.> filter (\(i, _) -> (i + start) `mod` n == 0) . zip [1..]

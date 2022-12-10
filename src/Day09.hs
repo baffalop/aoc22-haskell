@@ -1,4 +1,4 @@
-module Day09 (parse, solve1, solve2, vectorFrom, moveBy, follow, Pos(..), Vec(..)) where
+module Day09 (parse, solve1, solve2) where
 
 import Data.Text (Text, unpack)
 import Safe (readMay)

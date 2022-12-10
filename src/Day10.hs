@@ -27,10 +27,7 @@ solve1 :: Input -> Int
 solve1 = sum . (head <.> chunksOf 40) . drop 19 . signalStrengths
 
 solve2 :: Input -> Matrix Pixel
-solve2 = render . (draw <.> chunksOf 40) . signals
-  where
-    render :: [[Pixel]] -> Matrix Pixel
-    render = Mx.fromLists
+solve2 = Mx.fromLists . (draw <.> chunksOf 40) . signals
 
 draw :: [Int] -> [Pixel]
 draw = zip [0..] >>> fmap \(pos, sig) ->

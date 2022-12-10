@@ -6,17 +6,18 @@ import Data.Either.Extra (maybeToEither)
 import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Tuple.Extra (both, thd3)
+import Data.Tuple.Extra (both)
 import Control.Monad (join)
 import Data.Foldable (foldl')
+import Utils ((<.>))
 
-newtype Vec = Vec (Int, Int) deriving (Show)
+newtype Vec = Vec (Int, Int) deriving (Show, Eq)
 newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
 
-type Input = [[Vec]]
+type Input = [Vec]
 
 parse :: Text -> Either String Input
-parse = traverse parseMove . lines . unpack
+parse = join <.> traverse parseMove . lines . unpack
   where
     parseMove :: String -> Either String [Vec]
     parseMove (words -> [dir, countStr]) = do
@@ -31,31 +32,47 @@ parse = traverse parseMove . lines . unpack
     parseMove str = Left $ "Not two words: " <> str
 
 solve1 :: Input -> Int
-solve1 = Set.size . thd3 . foldl' move initial . join
-  where
-    move :: (Pos, Pos, Set Pos) -> Vec -> (Pos, Pos, Set Pos)
-    move (head, tail, trail) v =
-      let
-        newHead = head `moveBy` v
-        newTail = tail `follow` newHead
-      in
-      (newHead, newTail, Set.insert newTail trail)
+solve1 = solveFor 2
 
 solve2 :: Input -> Int
-solve2 = undefined
+solve2 = solveFor 10
 
-initial :: (Pos, Pos, Set Pos)
-initial = (Pos (0, 0), Pos (0, 0), Set.singleton $ Pos (0, 0))
+solveFor :: Int -> Input -> Int
+solveFor ropeLength = Set.size . snd . foldl' applyMove initial
+  where
+    applyMove :: ([Pos], Set Pos) -> Vec -> ([Pos], Set Pos)
+    applyMove (rope, trail) move =
+      let moved = moveRope move rope in
+      (moved, Set.insert (last rope) trail)
 
-follow :: Pos -> Pos -> Pos
+    initial :: ([Pos], Set Pos)
+    initial = (replicate ropeLength origin, Set.singleton origin)
+
+moveRope :: Vec -> [Pos] -> [Pos]
+moveRope v = \case
+  (head:tail@(neck:_)) ->
+    let
+      newHead = moveBy v head
+      nextMove = neck `follow` newHead
+    in
+    newHead : if nextMove == zero then tail else moveRope nextMove tail
+  rope -> moveBy v <$> rope
+
+follow :: Pos -> Pos -> Vec
 follow follower target =
   let (Vec vec@(vx, vy)) = vectorFrom follower target in
-  if abs vx < 2 && abs vy < 2 then follower
-  else follower `moveBy` Vec (both signum vec)
+  if abs vx < 2 && abs vy < 2 then Vec (0, 0)
+  else Vec (both signum vec)
 
-moveBy :: Pos -> Vec -> Pos
-moveBy (Pos (x, y)) (Vec (vx, vy)) = Pos (x + vx, y + vy)
+moveBy :: Vec -> Pos -> Pos
+moveBy (Vec (vx, vy)) (Pos (x, y)) = Pos (x + vx, y + vy)
 
 vectorFrom :: Pos -> Pos -> Vec
 vectorFrom (Pos (x1, y1)) (Pos (x2, y2)) =
   Vec (x2 - x1, y2 - y1)
+
+zero :: Vec
+zero = Vec (0, 0)
+
+origin :: Pos
+origin = Pos (0, 0)

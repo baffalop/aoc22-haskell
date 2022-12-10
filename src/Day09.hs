@@ -3,12 +3,12 @@ module Day09 (parse, solve1, solve2) where
 import Data.Text (Text, unpack)
 import Safe (readMay)
 import Data.Either.Extra (maybeToEither)
-import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Tuple.Extra (both)
 import Control.Monad (join)
 import Data.Foldable (foldl')
+import Data.Tuple.Extra (both)
+import Data.Function ((&))
 import Utils ((<.>))
 
 newtype Vec = Vec (Int, Int) deriving (Show, Eq)
@@ -43,7 +43,7 @@ solveFor ropeLength = Set.size . snd . foldl' applyMove initial
     applyMove :: ([Pos], Set Pos) -> Vec -> ([Pos], Set Pos)
     applyMove (rope, trail) move =
       let moved = moveRope move rope in
-      (moved, Set.insert (last rope) trail)
+      (moved, Set.insert (last moved) trail)
 
     initial :: ([Pos], Set Pos)
     initial = (replicate ropeLength origin, Set.singleton origin)
@@ -52,7 +52,7 @@ moveRope :: Vec -> [Pos] -> [Pos]
 moveRope v = \case
   (head:tail@(neck:_)) ->
     let
-      newHead = moveBy v head
+      newHead = head & moveBy v
       nextMove = neck `follow` newHead
     in
     newHead : if nextMove == zero then tail else moveRope nextMove tail
@@ -60,16 +60,14 @@ moveRope v = \case
 
 follow :: Pos -> Pos -> Vec
 follow follower target =
-  let (Vec vec@(vx, vy)) = vectorFrom follower target in
-  if abs vx < 2 && abs vy < 2 then Vec (0, 0)
-  else Vec (both signum vec)
+  let (Vec vec@(vx, vy)) = vecFrom follower target in
+  if abs vx > 1 || abs vy > 1 then Vec (both signum vec) else zero
 
 moveBy :: Vec -> Pos -> Pos
 moveBy (Vec (vx, vy)) (Pos (x, y)) = Pos (x + vx, y + vy)
 
-vectorFrom :: Pos -> Pos -> Vec
-vectorFrom (Pos (x1, y1)) (Pos (x2, y2)) =
-  Vec (x2 - x1, y2 - y1)
+vecFrom :: Pos -> Pos -> Vec
+vecFrom (Pos (x1, y1)) (Pos (x2, y2)) = Vec (x2 - x1, y2 - y1)
 
 zero :: Vec
 zero = Vec (0, 0)

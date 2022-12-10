@@ -1,5 +1,6 @@
 module Day09 (parse, solve1, solve2) where
 
+import Prelude hiding (head, tail)
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
 import Parsing (linesOf)

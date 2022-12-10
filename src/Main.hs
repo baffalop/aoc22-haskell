@@ -46,11 +46,12 @@ main = do
     Left err ->
       putStrLn $ "Parse error: " <> err
     Right Answer{..} -> do
-      when showParsed $ do
-        putStrLn "Parsed input:"
-        putStrLn parsed
-      putStrLn $ "Part 1: " <> part1
-      putStrLn $ "Part 2: " <> part2
+      when showParsed do
+        putStrLn "Parsed input:" >> putStrLn parsed
+        putStrLn ""
+      putStrLn "Part 1:" >> putStrLn part1
+      putStrLn ""
+      putStrLn "Part 2:" >> putStrLn part2
 
 solve :: Day -> Solution
 solve day = case dayInt day of
@@ -66,10 +67,10 @@ solve day = case dayInt day of
   10 -> eitherSolution Day10.parse Day10.solve1 Day10.solve2
   d -> error $ "No solution for day " <> show d <> " yet"
 
-simpleSolution :: (Show a, Show b) => (Text -> a) -> (a -> b) -> (a -> b) -> Solution
+simpleSolution :: (Show a, Show b, Show c) => (Text -> a) -> (a -> b) -> (a -> c) -> Solution
 simpleSolution parse = eitherSolution $ Right . parse
 
-eitherSolution :: (Show a, Show b) => (Text -> Either String a) -> (a -> b) -> (a -> b) -> Solution
+eitherSolution :: (Show a, Show b, Show c) => (Text -> Either String a) -> (a -> b) -> (a -> c) -> Solution
 eitherSolution parse solve1 solve2 = fmap answer . parse
   where
     answer parsed = Answer

@@ -4,10 +4,12 @@ import qualified Options.Applicative as Opt
 import qualified Advent
 import Advent (Day, mkDay, dayInt)
 import Data.Text (Text)
+import qualified Data.Text.IO as TIO
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
 import Control.Monad (when)
 import Control.Exception (catch, IOException)
+import Text.Printf (printf)
 
 import qualified Day01
 import qualified Day02
@@ -27,6 +29,7 @@ type Solution = Text -> Either String Answer
 data Options = Options
   { day :: Day
   , showParsed :: Bool
+  , runExample :: Bool
   }
 
 data Answer = Answer
@@ -37,12 +40,13 @@ data Answer = Answer
 
 main :: IO ()
 main = do
-  Options{ day, showParsed } <- Opt.execParser cli
+  Options{ day, showParsed, runExample } <- Opt.execParser cli
   key <- Key <$> readFile ".key" `catch` \e ->
     let _ = e :: IOException in
     fail "Ensure you've got the AoC session key in a `.key` file"
 
-  input <- fetchInput day key
+  input <- if runExample then readExampleInput day else fetchInput day key
+
   case solve day input of
     Left err ->
       putStrLn $ "Parse error: " <> err
@@ -53,6 +57,13 @@ main = do
       putStrLn "Part 1:" >> putStrLn part1
       putStrLn ""
       putStrLn "Part 2:" >> putStrLn part2
+
+readExampleInput :: Day -> IO Text
+readExampleInput (dayInt -> day) =
+  TIO.readFile file `catch` \e ->
+    let _ = e :: IOException in
+    fail $ "Have you created the file " <> file <> " ?"
+  where file = "input/2022/ex-" <> printf "%02d" day <> ".txt"
 
 solve :: Day -> Solution
 solve day = case dayInt day of
@@ -91,6 +102,8 @@ cli =
     opts = Options
       <$> Opt.argument readDay (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
       <*> Opt.switch (Opt.short 's' <> Opt.long "show-parsed" <> Opt.help "Show the parsed input")
+      <*> Opt.switch (Opt.short 'e' <> Opt.long "run-example"
+        <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
 
     readDay :: Opt.ReadM Day
     readDay = Opt.eitherReader $ \s ->

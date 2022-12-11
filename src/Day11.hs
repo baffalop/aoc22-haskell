@@ -5,6 +5,8 @@ import qualified Data.Attoparsec.Text as P
 import Data.Attoparsec.Text (Parser)
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Sequence (Seq)
+import qualified Data.Sequence as Seq
 import Control.Applicative ((<|>))
 import Data.Functor (($>))
 
@@ -14,7 +16,7 @@ newtype MonkeyId = ID Int deriving (Show, Eq, Ord)
 newtype Worry = Worry { worry::Int } deriving (Show, Eq, Ord)
 
 data Monkey = Monkey
-  { items :: [Worry]
+  { items :: Seq Worry
   , op :: Worry -> Worry
   , throwTo :: Worry -> MonkeyId
   }
@@ -30,8 +32,8 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
     monkey :: Parser (MonkeyId, Monkey)
     monkey = do
       monkeyId <- P.string "Monkey " >> ID <$> P.decimal <* P.char ':'
-      P.skipSpace
-      items <- P.string "Starting items: " >> (Worry <$> P.decimal) `P.sepBy` P.string ", "
+      P.skipSpace <* P.string "Starting items: "
+      items <- Seq.fromList <$> (Worry <$> P.decimal) `P.sepBy` P.string ", "
       P.skipSpace
       op <- operation
       P.skipSpace

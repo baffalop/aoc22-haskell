@@ -12,15 +12,16 @@ extra-source-files:
 
 dependencies:
   - base >= 4.7 && < 5
+  - optparse-applicative
+  - advent-of-code-api
+  - attoparsec
   - containers
   - safe
   - text
   - extra
   - matrix
   - vector
-  - attoparsec
-  - optparse-applicative
-  - advent-of-code-api
+  - mtl
 
 default-extensions:
   - OverloadedStrings

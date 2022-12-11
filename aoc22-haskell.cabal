@@ -51,6 +51,7 @@ executable aoc22-haskell
     , containers
     , extra
     , matrix
+    , mtl
     , optparse-applicative
     , safe
     , text

@@ -34,10 +34,8 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       monkeyId <- P.string "Monkey " >> ID <$> P.decimal <* P.char ':'
       P.skipSpace <* P.string "Starting items: "
       items <- Seq.fromList <$> (Worry <$> P.decimal) `P.sepBy` P.string ", "
-      P.skipSpace
-      amplify <- operation
-      P.skipSpace
-      throwTo <- test
+      amplify <- P.skipSpace *> operation
+      throwTo <- P.skipSpace *> test
       pure (monkeyId, Monkey {..})
 
     operation :: Parser (Worry -> Worry)

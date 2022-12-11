@@ -69,8 +69,8 @@ round :: MonkeyState
 round = do
   State.gets M.keys >>= traverse_ \k -> do
     monkey@Monkey{..} <- State.gets (! k)
-    forM_ items \(amplify -> worry) -> State.modify $
-      M.adjust (appendItem $ reduce worry) $ throwTo worry
+    forM_ items \(reduce . amplify -> worry) ->
+      State.modify $ M.adjust (appendItem worry) (throwTo worry)
     State.modify $ M.insert k monkey
       { items = Seq.empty
       , inspected = inspected + length items

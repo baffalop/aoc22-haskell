@@ -14,7 +14,8 @@ import Control.Applicative ((<|>))
 import Data.Functor (($>))
 import Utils ((<.>))
 import Control.Monad (replicateM, forM_)
-import Data.Foldable (traverse_)
+import Data.Foldable (traverse_, Foldable (toList))
+import Data.List (sortOn)
 
 type Monkeys = Map MonkeyId Monkey
 type MonkeyState = State Monkeys Monkeys
@@ -62,8 +63,11 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       ifFalse <- P.string "If false: throw to monkey " >> ID <$> P.decimal
       pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
 
-solve1 :: Monkeys -> Monkeys
-solve1 = evalState $ doTimes 20 round
+solve1 :: Monkeys -> Int
+solve1 = product . take 2 . mostInspected . evalState (doTimes 20 round)
+  where
+    mostInspected :: Monkeys -> [Int]
+    mostInspected = sortOn negate . (inspected <.> toList)
 
 round :: MonkeyState
 round = do

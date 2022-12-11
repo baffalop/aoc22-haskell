@@ -17,14 +17,14 @@ newtype Worry = Worry { worry::Int } deriving (Show, Eq, Ord)
 
 data Monkey = Monkey
   { items :: Seq Worry
-  , op :: Worry -> Worry
+  , amplify :: Worry -> Worry
   , throwTo :: Worry -> MonkeyId
   }
 
 instance Show Monkey where
   show Monkey{..} =
     "[Monkey] Items: " <> show (worry <$> items)
-    <> " Worry 2 becomes " <> show (worry $ op $ Worry 2) <> "\n"
+    <> " Worry 2 becomes " <> show (worry $ amplify $ Worry 2) <> "\n"
 
 parse :: Text -> Either String Monkeys
 parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
@@ -35,7 +35,7 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       P.skipSpace <* P.string "Starting items: "
       items <- Seq.fromList <$> (Worry <$> P.decimal) `P.sepBy` P.string ", "
       P.skipSpace
-      op <- operation
+      amplify <- operation
       P.skipSpace
       throwTo <- test
       pure (monkeyId, Monkey {..})

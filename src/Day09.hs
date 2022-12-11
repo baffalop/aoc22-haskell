@@ -9,6 +9,7 @@ import qualified Data.Set as Set
 import Control.Monad (join)
 import Data.Foldable (foldl')
 import Data.Tuple.Extra (both)
+import Data.Functor (($>))
 
 newtype Vec = Vec (Int, Int) deriving (Show, Eq)
 newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
@@ -16,16 +17,15 @@ newtype Pos = Pos (Int, Int) deriving (Show, Eq, Ord)
 type Input = [Vec]
 
 parse :: Text -> Either String Input
-parse = P.parseOnly $ join <$> linesOf move
-  where
-    move :: P.Parser [Vec]
-    move = flip replicate <$> P.choice
-      [ Vec (1, 0) <$ P.char 'R'
-      , Vec (-1, 0) <$ P.char 'L'
-      , Vec (0, 1) <$ P.char 'U'
-      , Vec (0, -1) <$ P.char 'D'
-      ]
-      <* P.space <*> P.decimal
+parse = P.parseOnly $ join <$> linesOf do
+  v <- P.choice
+    [ P.char 'R' $> Vec (1, 0)
+    , P.char 'L' $> Vec (-1, 0)
+    , P.char 'U' $> Vec (0, 1)
+    , P.char 'D' $> Vec (0, -1)
+    ]
+  count <- P.space *> P.decimal
+  pure $ replicate count v
 
 solve1 :: Input -> Int
 solve1 = moveRopeOfLength 2

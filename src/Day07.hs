@@ -7,6 +7,7 @@ import Parsing (linesOf, word, alphaWord)
 import Control.Applicative ((<|>))
 import Data.Maybe (catMaybes)
 import Utils ((<.>))
+import Control.Monad (void)
 
 type FS = [FsItem]
 
@@ -22,11 +23,12 @@ parse :: Text -> Either String FsItem
 parse = P.parseOnly recursedDir
   where
     recursedDir :: Parser FsItem
-    recursedDir = mkDir
-      <$ P.string "$ cd " <*> dirname <* P.endOfLine
-      <* P.string "$ ls" <* P.endOfLine
-      <*> fs <* (P.endOfLine <|> P.endOfInput)
-      <* (() <$ P.string "$ cd .." <|> P.endOfInput)
+    recursedDir = do
+      name <- P.string "$ cd " <* dirname <* P.endOfLine
+      void (P.string "$ ls") <* P.endOfLine
+      contents <- fs <* (P.endOfLine <|> P.endOfInput)
+      void (P.string "$ cd ..") <|> P.endOfInput
+      pure $ Dir (sum $ sizeOf <$> contents) name contents
 
     fs :: Parser FS
     fs = catMaybes <.> linesOf $ P.choice
@@ -48,9 +50,6 @@ solve2 fs = minimum $ filter (>= requireFreed) $ dirSizes fs
 dirSizes :: FsItem -> [Size]
 dirSizes (File _ _) = []
 dirSizes (Dir size _ fs) = size : foldMap dirSizes fs
-
-mkDir :: Name -> FS -> FsItem
-mkDir name contents = Dir (sum $ sizeOf <$> contents) name contents
 
 sizeOf :: FsItem -> Size
 sizeOf (File size _) = size

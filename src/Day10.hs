@@ -20,7 +20,8 @@ instance Show Pixel where
 parse :: Text -> Either String Input
 parse = P.parseOnly $ join <.> linesOf $ P.choice
   [ [Nothing] <$ P.string "noop"
-  , (Nothing :) . (: []) . Just <$ P.string "addx " <*> P.signed P.decimal
+  , do n <- P.string "addx " >> P.signed P.decimal
+       pure [Nothing, Just n]
   ]
 
 solve1 :: Input -> Int

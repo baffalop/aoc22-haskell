@@ -28,14 +28,11 @@ predWrap x
 data Strategy = Lose | Draw | Win
 
 parse :: Text -> Either String [(Move, Move)]
-parse = P.parseOnly $ linesOf (pairBy ' ' move)
-  where
-    move :: P.Parser Move
-    move = P.choice
-      [ Rock <$ (P.char 'A' <|> P.char 'X')
-      , Paper <$ (P.char 'B' <|> P.char 'Y')
-      , Scissors <$ (P.char 'C' <|> P.char 'Z')
-      ]
+parse = P.parseOnly $ linesOf $ pairBy ' ' $ P.choice
+  [ Rock <$ (P.char 'A' <|> P.char 'X')
+  , Paper <$ (P.char 'B' <|> P.char 'Y')
+  , Scissors <$ (P.char 'C' <|> P.char 'Z')
+  ]
 
 solve1 :: [(Move, Move)] -> Int
 solve1 = sum . fmap score

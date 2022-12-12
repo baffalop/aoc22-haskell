@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell, DeriveFunctor #-}
+
 module Day12 (parse, solve1, solve2) where
 
 import Prelude hiding (map)
@@ -13,10 +15,11 @@ import Data.Either.Extra (maybeToEither)
 import Data.Function ((&))
 import Data.List (elemIndex, nub)
 import Data.Maybe (isJust)
-import Data.Tuple.Extra (both, uncurry3)
+import Data.Tuple.Extra (both)
 import Data.Function.Flip ((<-->))
 import Utils (indexedFind, within)
 import Data.Functor ((<&>))
+import Lens.Micro.Platform (makeLensesFor, (%~))
 
 type Terrain = Matrix Int
 type Coord = (Int, Int)
@@ -26,6 +29,16 @@ data Hill = Hill
   , start :: Coord
   , end :: Coord
   } deriving (Show)
+
+data SearchState = Search
+  { candidates :: MinPQueue Int Coord
+  , pathScores :: Map Coord Int
+  , heuristics :: Map Coord Int
+  }
+
+makeLensesFor
+  [("candidates", "_candidates"), ("pathScores", "_pathScores"), ("heuristics", "_heuristics")]
+  ''SearchState
 
 parse :: Text -> Either String Hill
 parse (lines . unpack -> map) = do
@@ -48,23 +61,27 @@ solve2 = undefined
 
 aStarShortest :: Coord -> Coord -> Terrain -> Maybe Int
 aStarShortest start end terrain =
-  search (Map.singleton start 0) (Map.singleton start $ distance start end) (Q.singleton 0 start)
+  search $ Search
+    { candidates = Q.singleton 0 start
+    , pathScores = Map.singleton start 0
+    , heuristics = Map.singleton start $ distance start end
+    }
   where
-    search :: Map Coord Int -> Map Coord Int -> MinPQueue Int Coord -> Maybe Int
-    search pathScores endScores (Q.minView -> candidatesView) = do
+    search :: SearchState -> Maybe Int
+    search Search{ candidates = (Q.minView -> candidatesView), .. } = do
       (cur, candidates) <- candidatesView
       if cur == end then pathScores !? cur
       else do
         nextPathScore <- pathScores !? cur <&> (+ 1)
         let nextCandidates = flip filter (neighbours cur terrain) \neighbour ->
               pathScores !? neighbour & maybe True (> nextPathScore)
-        uncurry3 search $ (foldr <--> nextCandidates) (pathScores, endScores, candidates)
-          \candidate (pathScores', endScores', candidates') ->
-            let nextEndScore = nextPathScore + distance candidate end in
-            ( Map.insert candidate nextPathScore pathScores'
-            , Map.insert candidate nextEndScore endScores'
-            , addUnique nextEndScore candidate candidates'
-            )
+        search $ (foldr <--> nextCandidates) Search{..}
+          \candidate state ->
+            let nextHeuristic = nextPathScore + distance candidate end in
+            state
+              & _pathScores %~ Map.insert candidate nextPathScore
+              & _heuristics %~ Map.insert candidate nextHeuristic
+              & _candidates %~ addUnique nextHeuristic candidate
 
 neighbours :: Coord -> Terrain -> [Coord]
 neighbours coord@(row, col) terrain = nub do

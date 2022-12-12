@@ -8,17 +8,17 @@ import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
-import Control.Monad.State (State, evalState)
+import Control.Monad.State (State, execState)
 import qualified Control.Monad.State as State
 import Control.Applicative ((<|>))
 import Data.Functor (($>))
 import Utils ((<.>))
-import Control.Monad (replicateM, forM_)
+import Control.Monad (replicateM_, forM_)
 import Data.Foldable (traverse_, Foldable (toList))
 import Data.List (sortOn)
 
 type Monkeys = Map MonkeyId Monkey
-type MonkeyState = State Monkeys Monkeys
+type MonkeyState = State Monkeys ()
 
 newtype MonkeyId = ID Int deriving (Show, Eq, Ord)
 newtype Worry = Worry { worry::Int } deriving (Show, Eq, Ord)
@@ -64,13 +64,13 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
 
 solve1 :: Monkeys -> Int
-solve1 = product . take 2 . mostInspected . evalState (doTimes 20 round)
+solve1 = product . take 2 . mostInspected . execState (replicateM_ 20 round)
   where
     mostInspected :: Monkeys -> [Int]
     mostInspected = sortOn negate . (inspected <.> toList)
 
 round :: MonkeyState
-round = do
+round =
   State.gets M.keys >>= traverse_ \k -> do
     monkey@Monkey{..} <- State.gets (! k)
     forM_ items \(reduce . amplify -> worry) ->
@@ -79,7 +79,6 @@ round = do
       { items = Seq.empty
       , inspected = inspected + length items
       }
-  State.get
 
 solve2 :: Monkeys -> Int
 solve2 = undefined
@@ -92,6 +91,3 @@ reduce = onWorry (`div` 3)
 
 onWorry :: (Int -> Int) -> Worry -> Worry
 onWorry f = Worry . f . worry
-
-doTimes :: Int -> State a b -> State a b
-doTimes n = last <.> replicateM n

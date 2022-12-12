@@ -16,7 +16,7 @@ import qualified Control.Monad.State as State
 import Control.Applicative ((<|>))
 import Data.Functor (($>))
 import Utils ((<.>))
-import Control.Monad (replicateM_, forM_)
+import Control.Monad (replicateM_, forM_, void)
 import Data.Foldable (traverse_, Foldable (toList))
 import Data.List (sortOn)
 import Control.Arrow ((>>>))
@@ -59,7 +59,7 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
 
     operation :: Parser (Worry -> Worry)
     operation = fmap <$> do
-      _ <- P.string "Operation: new = old"
+      void $ P.string "Operation: new = old"
       operator <- (*) <$ P.string " * " <|> (+) <$ P.string " + "
       operator <$> P.decimal <|> P.string "old" $> \x -> x `operator` x
 

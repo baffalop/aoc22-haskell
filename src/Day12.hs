@@ -11,6 +11,7 @@ import Data.PQueue.Prio.Min (MinPQueue)
 import qualified Data.PQueue.Prio.Min as Q
 import Data.Map (Map, (!?))
 import qualified Data.Map as Map
+import Lens.Micro.Platform (makeLensesFor, (%~))
 import Data.Either.Extra (maybeToEither)
 import Data.Function ((&))
 import Data.List (elemIndex, nub)
@@ -19,7 +20,6 @@ import Data.Tuple.Extra (both)
 import Data.Function.Flip (flip3)
 import Utils (indexedFind, within)
 import Data.Functor ((<&>))
-import Lens.Micro.Platform (makeLensesFor, (%~))
 
 type Terrain = Matrix Int
 type Coord = (Int, Int)

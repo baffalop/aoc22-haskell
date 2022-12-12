@@ -16,7 +16,7 @@ import Data.Function ((&))
 import Data.List (elemIndex, nub)
 import Data.Maybe (isJust)
 import Data.Tuple.Extra (both)
-import Data.Function.Flip ((<-->))
+import Data.Function.Flip (flip3)
 import Utils (indexedFind, within)
 import Data.Functor ((<&>))
 import Lens.Micro.Platform (makeLensesFor, (%~))
@@ -75,7 +75,7 @@ aStarShortest start end terrain =
         nextPathScore <- pathScores !? cur <&> (+ 1)
         let nextCandidates = flip filter (neighbours cur terrain) \neighbour ->
               pathScores !? neighbour & maybe True (> nextPathScore)
-        search $ (foldr <--> nextCandidates) Search{..}
+        search $ flip3 foldr nextCandidates Search{..}
           \candidate state ->
             let nextHeuristic = nextPathScore + distance candidate end in
             state

@@ -27,7 +27,7 @@ type MonkeyState = State Monkeys ()
 newtype MonkeyId = ID Int deriving (Show, Eq, Ord)
 
 type Worry = IWorry Integer
-newtype IWorry a = Worry { worry::a } deriving (Show, Eq, Ord, Functor)
+newtype IWorry a = Worry { worry :: a } deriving (Show, Eq, Ord, Functor)
 
 data Monkey = Monkey
   { items :: Seq Worry

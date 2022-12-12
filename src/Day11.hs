@@ -8,7 +8,7 @@ import qualified Data.Attoparsec.Text as P
 import Data.Attoparsec.Text (Parser)
 import Data.Map (Map, (!))
 import qualified Data.Map as M
-import Data.Sequence (Seq)
+import Data.Sequence (Seq, (|>))
 import qualified Data.Sequence as Seq
 import Lens.Micro.Platform (makeLensesFor, (%~), (.~))
 import Control.Monad.State (State, execState)
@@ -19,6 +19,7 @@ import Utils ((<.>))
 import Control.Monad (replicateM_, forM_)
 import Data.Foldable (traverse_, Foldable (toList))
 import Data.List (sortOn)
+import Control.Arrow ((>>>))
 
 type Monkeys = Map MonkeyId Monkey
 type MonkeyState = State Monkeys ()
@@ -78,8 +79,8 @@ round :: MonkeyState
 round =
   State.gets M.keys >>= traverse_ \k -> do
     Monkey{..} <- State.gets (! k)
-    forM_ items \(reduce . amplify -> worry) ->
-      State.modify $ M.adjust (_items %~ (Seq.|> worry)) (throwTo worry)
+    forM_ items $ amplify >>> reduce >>> \worry ->
+      State.modify $ M.adjust (_items %~ (|> worry)) (throwTo worry)
     State.modify $ flip M.adjust k $ (_items .~ Seq.empty) . (_inspected %~ (+ length items))
 
 scoreMostInspected :: Monkeys -> Int

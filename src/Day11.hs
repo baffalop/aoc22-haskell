@@ -77,8 +77,9 @@ solve2 :: Monkeys -> Int
 solve2 monkeys = scoreMostInspected $ execState (replicateM_ 10000 roundModulo) monkeys
   where
     roundModulo :: State Monkeys ()
-    roundModulo = round id
-      >> State.modify (fmap $ _items %~ fmap (fmap (`mod` commonDivisor)))
+    roundModulo = do
+      round id
+      State.modify (fmap $ _items %~ fmap (fmap (`mod` commonDivisor)))
 
     commonDivisor :: Integer
     commonDivisor = product $ divisor <$> toList monkeys

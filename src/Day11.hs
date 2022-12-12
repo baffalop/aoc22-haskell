@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Day11 (parse, solve1, solve2) where
 
 import Prelude hiding (round)
@@ -8,6 +10,7 @@ import Data.Map (Map, (!))
 import qualified Data.Map as M
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
+import Lens.Micro.Platform (makeLensesFor, (%~), (.~))
 import Control.Monad.State (State, execState)
 import qualified Control.Monad.State as State
 import Control.Applicative ((<|>))
@@ -35,6 +38,8 @@ instance Show Monkey where
     "[Monkey] Items: " <> show (worry <$> items)
     <> " Worry 2 becomes " <> show (worry $ amplify $ Worry 2)
     <> " - Inspected: " <> show inspected <> "\n"
+
+makeLensesFor [("items", "_items"), ("inspected", "_inspected")] ''Monkey
 
 parse :: Text -> Either String Monkeys
 parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
@@ -72,19 +77,13 @@ solve2 = undefined
 round :: MonkeyState
 round =
   State.gets M.keys >>= traverse_ \k -> do
-    monkey@Monkey{..} <- State.gets (! k)
+    Monkey{..} <- State.gets (! k)
     forM_ items \(reduce . amplify -> worry) ->
-      State.modify $ M.adjust (appendItem worry) (throwTo worry)
-    State.modify $ M.insert k monkey
-      { items = Seq.empty
-      , inspected = inspected + length items
-      }
+      State.modify $ M.adjust (_items %~ (Seq.|> worry)) (throwTo worry)
+    State.modify $ flip M.adjust k $ (_items .~ Seq.empty) . (_inspected %~ (+ length items))
 
 scoreMostInspected :: Monkeys -> Int
 scoreMostInspected = product . take 2 . sortOn negate . (inspected <.> toList)
-
-appendItem :: Worry -> Monkey -> Monkey
-appendItem worry monkey@Monkey{ items } = monkey { items = items Seq.|> worry }
 
 reduce :: Worry -> Worry
 reduce = onWorry (`div` 3)

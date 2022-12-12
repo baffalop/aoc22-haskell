@@ -22,6 +22,7 @@ dependencies:
   - matrix
   - vector
   - mtl
+  - microlens-platform
 
 default-extensions:
   - OverloadedStrings

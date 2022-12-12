@@ -23,6 +23,8 @@ dependencies:
   - vector
   - mtl
   - microlens-platform
+  - pqueue
+  - composition-extra
 
 default-extensions:
   - OverloadedStrings

@@ -49,12 +49,14 @@ executable aoc22-haskell
       advent-of-code-api
     , attoparsec
     , base >=4.7 && <5
+    , composition-extra
     , containers
     , extra
     , matrix
     , microlens-platform
     , mtl
     , optparse-applicative
+    , pqueue
     , safe
     , text
     , vector

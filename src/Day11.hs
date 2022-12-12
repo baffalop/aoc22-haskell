@@ -70,13 +70,13 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
 
 solve1 :: Monkeys -> Int
-solve1 = scoreMostInspected . execState (replicateM_ 20 round)
+solve1 = scoreMostInspected . execState (replicateM_ 20 $ round $ onWorry (`div` 3))
 
 solve2 :: Monkeys -> Int
 solve2 = undefined
 
-round :: MonkeyState
-round =
+round :: (Worry -> Worry) -> MonkeyState
+round reduce =
   State.gets M.keys >>= traverse_ \k -> do
     Monkey{..} <- State.gets (! k)
     forM_ items $ amplify >>> reduce >>> \worry ->
@@ -85,9 +85,6 @@ round =
 
 scoreMostInspected :: Monkeys -> Int
 scoreMostInspected = product . take 2 . sortOn negate . (inspected <.> toList)
-
-reduce :: Worry -> Worry
-reduce = onWorry (`div` 3)
 
 onWorry :: (Int -> Int) -> Worry -> Worry
 onWorry f = Worry . f . worry

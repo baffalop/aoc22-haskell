@@ -79,7 +79,7 @@ solve2 monkeys = scoreMostInspected $ execState (replicateM_ 10000 roundModulo) 
     roundModulo :: State Monkeys ()
     roundModulo = do
       round id
-      State.modify (fmap $ _items %~ fmap (fmap (`mod` commonDivisor)))
+      State.modify $ fmap $ _items %~ fmap (fmap (`mod` commonDivisor))
 
     commonDivisor :: Integer
     commonDivisor = product $ divisor <$> toList monkeys

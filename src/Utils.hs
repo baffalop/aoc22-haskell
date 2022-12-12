@@ -2,6 +2,7 @@ module Utils
   ((<.>)
   , nTimes
   , indexedFind
+  , within
   ) where
 import Data.Foldable (find)
 
@@ -14,3 +15,6 @@ nTimes n f = foldr (.) id $ replicate n f
 
 indexedFind :: (a -> Bool) -> [a] -> Maybe (Int, a)
 indexedFind p = find (p . snd) . zip [0..]
+
+within :: Ord a => a -> (a, a) -> Bool
+within x (a, b) = x >= a && x <= b

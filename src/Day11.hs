@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell, DeriveFunctor #-}
 
 module Day11 (parse, solve1, solve2) where
 
@@ -25,11 +25,14 @@ type Monkeys = Map MonkeyId Monkey
 type MonkeyState = State Monkeys ()
 
 newtype MonkeyId = ID Int deriving (Show, Eq, Ord)
-newtype Worry = Worry { worry::Int } deriving (Show, Eq, Ord)
+
+type Worry = IWorry Integer
+newtype IWorry a = Worry { worry::a } deriving (Show, Eq, Ord, Functor)
 
 data Monkey = Monkey
   { items :: Seq Worry
   , amplify :: Worry -> Worry
+  , divisor :: Integer
   , throwTo :: Worry -> MonkeyId
   , inspected :: Int
   }
@@ -51,27 +54,34 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       P.skipSpace <* P.string "Starting items: "
       items <- Seq.fromList <$> (Worry <$> P.decimal) `P.sepBy` P.string ", "
       amplify <- P.skipSpace *> operation
-      throwTo <- P.skipSpace *> test
+      (divisor, throwTo) <- P.skipSpace *> logic
       pure (monkeyId, Monkey { inspected = 0, .. })
 
     operation :: Parser (Worry -> Worry)
-    operation = onWorry <$> do
+    operation = fmap <$> do
       _ <- P.string "Operation: new = old"
       operator <- (*) <$ P.string " * " <|> (+) <$ P.string " + "
       operator <$> P.decimal <|> P.string "old" $> \x -> x `operator` x
 
-    test :: Parser (Worry -> MonkeyId)
-    test = do
-      n <- P.string "Test: divisible by " *> P.decimal <* P.skipSpace
+    logic :: Integral n => Parser (n, IWorry n -> MonkeyId)
+    logic = do
+      divisor <- P.string "Test: divisible by " *> P.decimal <* P.skipSpace
       ifTrue <- P.string "If true: throw to monkey " >> ID <$> P.decimal <* P.skipSpace
       ifFalse <- P.string "If false: throw to monkey " >> ID <$> P.decimal
-      pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
+      pure $ (divisor,) \(Worry w) -> if (w `mod` divisor) == 0 then ifTrue else ifFalse
 
 solve1 :: Monkeys -> Int
-solve1 = scoreMostInspected . execState (replicateM_ 20 $ round $ onWorry (`div` 3))
+solve1 = scoreMostInspected . execState (replicateM_ 20 $ round $ fmap (`div` 3))
 
 solve2 :: Monkeys -> Int
-solve2 = undefined
+solve2 monkeys = scoreMostInspected $ execState (replicateM_ 10000 roundModulo) monkeys
+  where
+    roundModulo :: State Monkeys ()
+    roundModulo = round id
+      >> State.modify (fmap $ _items %~ fmap (fmap (`mod` commonDivisor)))
+
+    commonDivisor :: Integer
+    commonDivisor = product $ divisor <$> toList monkeys
 
 round :: (Worry -> Worry) -> MonkeyState
 round reduce =
@@ -83,6 +93,3 @@ round reduce =
 
 scoreMostInspected :: Monkeys -> Int
 scoreMostInspected = product . take 2 . sortOn negate . (inspected <.> toList)
-
-onWorry :: (Int -> Int) -> Worry -> Worry
-onWorry f = Worry . f . worry

@@ -62,10 +62,8 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
 
     test :: Parser (Worry -> MonkeyId)
     test = do
-      n <- P.string "Test: divisible by " *> P.decimal
-      P.skipSpace
-      ifTrue <- P.string "If true: throw to monkey " >> ID <$> P.decimal
-      P.skipSpace
+      n <- P.string "Test: divisible by " *> P.decimal <* P.skipSpace
+      ifTrue <- P.string "If true: throw to monkey " >> ID <$> P.decimal <* P.skipSpace
       ifFalse <- P.string "If false: throw to monkey " >> ID <$> P.decimal
       pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
 

@@ -64,10 +64,10 @@ parse = P.parseOnly $ M.fromList <$> monkey `P.sepBy` P.skipSpace
       pure $ \(Worry w) -> if (w `mod` n) == 0 then ifTrue else ifFalse
 
 solve1 :: Monkeys -> Int
-solve1 = product . take 2 . mostInspected . execState (replicateM_ 20 round)
-  where
-    mostInspected :: Monkeys -> [Int]
-    mostInspected = sortOn negate . (inspected <.> toList)
+solve1 = scoreMostInspected . execState (replicateM_ 20 round)
+
+solve2 :: Monkeys -> Int
+solve2 = undefined
 
 round :: MonkeyState
 round =
@@ -80,8 +80,8 @@ round =
       , inspected = inspected + length items
       }
 
-solve2 :: Monkeys -> Int
-solve2 = undefined
+scoreMostInspected :: Monkeys -> Int
+scoreMostInspected = product . take 2 . sortOn negate . (inspected <.> toList)
 
 appendItem :: Worry -> Monkey -> Monkey
 appendItem worry monkey@Monkey{ items } = monkey { items = items Seq.|> worry }

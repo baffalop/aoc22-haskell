@@ -8,7 +8,8 @@ import Parsing (pairBy)
 import Data.List (findIndices, sort)
 import Utils ((<.>))
 
-type Input = [(Nested Int, Nested Int)]
+type Packet = Nested Int
+type Input = [(Packet, Packet)]
 
 data Nested a = One a | Some [Nested a] deriving (Show, Eq)
 
@@ -28,9 +29,9 @@ parse :: Text -> Either String Input
 parse = P.parseOnly $
   pairBy '\n' nested `P.sepBy` (P.endOfLine <* P.endOfLine)
   where
-    nested :: P.Parser (Nested Int)
+    nested :: P.Parser Packet
     nested = P.choice
-      [ One <$> P.decimal :: P.Parser (Nested Int)
+      [ One <$> P.decimal :: P.Parser Packet
       , Some <$ P.char '[' <*> nested `P.sepBy` P.char ',' <* P.char ']'
       ]
 
@@ -40,7 +41,6 @@ solve1 = sum . indicesNat (uncurry (<))
 solve2 :: Input -> Int
 solve2 = product . indicesNat (`elem` dividers) . sort . (dividers <>) . foldMap unpair
   where
-    dividers :: [Nested Int]
     dividers = [Some [Some [One 2]], Some [Some [One 6]]]
 
 indicesNat :: (a -> Bool) -> [a] -> [Int]

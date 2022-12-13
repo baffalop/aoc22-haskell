@@ -15,6 +15,7 @@ import Data.List (elemIndex, nub)
 import Data.Maybe (isJust)
 import Utils (indexedFind, within)
 import Data.Tuple.Extra (both)
+import Control.Monad ((>=>))
 
 type Terrain = Matrix Int
 type Coord = (Int, Int)
@@ -48,8 +49,7 @@ shortestPathDijkstra :: Coord -> (Coord -> Bool) -> Terrain -> Maybe Int
 shortestPathDijkstra from isTarget terrain = search Set.empty $ Q.singleton 0 from
   where
     search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
-    search visited (Q.minViewWithKey -> unvisitedView) = do
-      ((score, cur), unvisited) <- unvisitedView
+    search visited = Q.minViewWithKey >=> \((score, cur), unvisited) ->
       if isTarget cur then return score
       else if cur `Set.member` visited then search visited unvisited
       else search (Set.insert cur visited)

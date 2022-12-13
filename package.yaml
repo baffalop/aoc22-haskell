@@ -12,28 +12,28 @@ extra-source-files:
 
 dependencies:
   - base >= 4.7 && < 5
-  - optparse-applicative
   - advent-of-code-api
   - attoparsec
+  - composition-extra
   - containers
-  - safe
-  - text
   - extra
   - matrix
-  - vector
-  - mtl
   - microlens-platform
+  - mtl
+  - optparse-applicative
   - pqueue
-  - composition-extra
+  - safe
+  - text
+  - vector
 
 default-extensions:
-  - OverloadedStrings
-  - NamedFieldPuns
-  - TupleSections
-  - LambdaCase
-  - ViewPatterns
-  - RecordWildCards
   - BlockArguments
+  - LambdaCase
+  - NamedFieldPuns
+  - OverloadedStrings
+  - RecordWildCards
+  - TupleSections
+  - ViewPatterns
 
 ghc-options:
   - -Wall

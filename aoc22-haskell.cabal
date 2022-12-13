@@ -31,19 +31,20 @@ executable aoc22-haskell
       Day10
       Day11
       Day12
+      Day13
       Parsing
       Utils
       Paths_aoc22_haskell
   hs-source-dirs:
       src
   default-extensions:
-      OverloadedStrings
-      NamedFieldPuns
-      TupleSections
-      LambdaCase
-      ViewPatterns
-      RecordWildCards
       BlockArguments
+      LambdaCase
+      NamedFieldPuns
+      OverloadedStrings
+      RecordWildCards
+      TupleSections
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       advent-of-code-api

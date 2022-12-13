@@ -17,8 +17,8 @@ instance Ord a => Ord (Nested a) where
   compare :: Nested a -> Nested a -> Ordering
   compare = curry $ \case
     (One a, One b) -> compare a b
-    (One a, bs) -> compare (Some [One a]) bs
-    (as, One b) -> compare as (Some [One b])
+    (One a, Some bs) -> compare [One a] bs
+    (Some as, One b) -> compare as [One b]
     (Some as, Some bs) -> compare as bs
 
 parse :: Text -> Either String Input

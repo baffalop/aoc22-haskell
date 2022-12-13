@@ -31,13 +31,13 @@ parse (lines . unpack -> map) = do
   start <- findCoord 'S' & maybeToEither "Could not find start"
   end <- findCoord 'E' & maybeToEither "Could not find end"
   let terrain = fmap (subtract 97 . ord) $ Mx.setElem 'a' start $ Mx.setElem 'z' end $ Mx.fromLists map
-  pure $ Hill { .. }
+  return Hill{..}
   where
     findCoord :: Char -> Maybe Coord
     findCoord c = do
       (y, maybeX) <- indexedFind isJust $ elemIndex c <$> map
       x <- maybeX
-      pure $ both (+ 1) (y, x)
+      return $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
 solve1 Hill{..} = shortestPathDijkstra end (== start) terrain

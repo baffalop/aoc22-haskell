@@ -3,6 +3,7 @@ module Utils
   , nTimes
   , indexedFind
   , within
+  , ffmap
   ) where
 import Data.Foldable (find)
 
@@ -18,3 +19,6 @@ indexedFind p = find (p . snd) . zip [0..]
 
 within :: Ord a => a -> (a, a) -> Bool
 within x (a, b) = x >= a && x <= b
+
+ffmap :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+ffmap = fmap . fmap

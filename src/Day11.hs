@@ -15,7 +15,7 @@ import Control.Monad.State (State, execState)
 import qualified Control.Monad.State as State
 import Control.Applicative ((<|>))
 import Data.Functor (($>))
-import Utils ((<.>))
+import Utils ((<.>), ffmap)
 import Control.Monad (replicateM_, forM_, void)
 import Data.Foldable (traverse_, Foldable (toList))
 import Data.List (sortOn)
@@ -79,7 +79,7 @@ solve2 monkeys = scoreMostInspected $ execState (replicateM_ 10000 roundModulo) 
     roundModulo :: State Monkeys ()
     roundModulo = do
       round id
-      State.modify $ fmap $ _items %~ fmap (fmap (`mod` commonDivisor))
+      State.modify $ fmap $ _items %~ ffmap (`mod` commonDivisor)
 
     commonDivisor :: Integer
     commonDivisor = product $ divisor <$> toList monkeys

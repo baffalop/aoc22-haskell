@@ -29,7 +29,7 @@ parse :: Text -> Either String Hill
 parse (lines . unpack -> map) = do
   start <- findCoord 'S' & maybeToEither "Could not find start"
   end <- findCoord 'E' & maybeToEither "Could not find end"
-  let terrain = fmap ord $ Mx.setElem 'a' start $ Mx.setElem 'z' end $ Mx.fromLists map
+  let terrain = fmap (subtract 97 . ord) $ Mx.setElem 'a' start $ Mx.setElem 'z' end $ Mx.fromLists map
   pure $ Hill { .. }
   where
     findCoord :: Char -> Maybe Coord
@@ -39,18 +39,18 @@ parse (lines . unpack -> map) = do
       pure $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
-solve1 Hill{..} = shortestPathDijkstra start end terrain
+solve1 Hill{..} = shortestPathDijkstra end (== start) terrain
 
-solve2 :: Hill -> Int
-solve2 = undefined
+solve2 :: Hill -> Maybe Int
+solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) terrain
 
-shortestPathDijkstra :: Coord -> Coord -> Terrain -> Maybe Int
-shortestPathDijkstra start end terrain = search Set.empty $ Q.singleton 0 start
+shortestPathDijkstra :: Coord -> (Coord -> Bool) -> Terrain -> Maybe Int
+shortestPathDijkstra from isTarget terrain = search Set.empty $ Q.singleton 0 from
   where
     search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
     search visited (Q.minViewWithKey -> unvisitedView) = do
       ((score, cur), unvisited) <- unvisitedView
-      if cur == end then return score
+      if isTarget cur then return score
       else if cur `Set.member` visited then search visited unvisited
       else search (Set.insert cur visited)
         $ foldr (Q.insert $ score + 1) unvisited
@@ -60,5 +60,5 @@ neighbours :: Coord -> Terrain -> [Coord]
 neighbours coord@(row, col) terrain = nub do
   row' <- filter (`within` (1, Mx.nrows terrain)) [row - 1, row + 1]
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
-  flip filter [(row', col), (row, col')] $ \c -> terrain ! c - h <= 1
+  flip filter [(row', col), (row, col')] $ \c -> h - terrain ! c <= 1
   where h = terrain ! coord

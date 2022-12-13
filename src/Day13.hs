@@ -19,11 +19,7 @@ instance Ord a => Ord (Nested a) where
     (One a, One b) -> compare a b
     (One a, bs) -> compare (Some [One a]) bs
     (as, One b) -> compare as (Some [One b])
-    (Some [], Some []) -> EQ
-    (Some [], _) -> LT
-    (_, Some []) -> GT
-    (Some (a:as), Some (b:bs)) ->
-      if a == b then compare (Some as) (Some bs) else compare a b
+    (Some as, Some bs) -> compare as bs
 
 parse :: Text -> Either String Input
 parse = P.parseOnly $

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell, DeriveFunctor #-}
-
 module Day12 (parse, solve1, solve2) where
 
 import Prelude hiding (map)
@@ -9,17 +7,14 @@ import Data.Matrix (Matrix, (!))
 import qualified Data.Matrix as Mx
 import Data.PQueue.Prio.Min (MinPQueue)
 import qualified Data.PQueue.Prio.Min as Q
-import Data.Map (Map, (!?))
-import qualified Data.Map as Map
-import Lens.Micro.Platform (makeLensesFor, (%~))
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Either.Extra (maybeToEither)
 import Data.Function ((&))
 import Data.List (elemIndex, nub)
 import Data.Maybe (isJust)
-import Data.Tuple.Extra (both)
-import Data.Function.Flip (flip3)
 import Utils (indexedFind, within)
-import Data.Functor ((<&>))
+import Data.Tuple.Extra (both)
 
 type Terrain = Matrix Int
 type Coord = (Int, Int)
@@ -29,16 +24,6 @@ data Hill = Hill
   , start :: Coord
   , end :: Coord
   } deriving (Show)
-
-data SearchState = Search
-  { candidates :: MinPQueue Int Coord
-  , pathScores :: Map Coord Int
-  , heuristics :: Map Coord Int
-  }
-
-makeLensesFor
-  [("candidates", "_candidates"), ("pathScores", "_pathScores"), ("heuristics", "_heuristics")]
-  ''SearchState
 
 parse :: Text -> Either String Hill
 parse (lines . unpack -> map) = do
@@ -54,34 +39,22 @@ parse (lines . unpack -> map) = do
       pure $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
-solve1 Hill{..} = aStarShortest start end terrain
+solve1 Hill{..} = shortestPathDijkstra start end terrain
 
 solve2 :: Hill -> Int
 solve2 = undefined
 
-aStarShortest :: Coord -> Coord -> Terrain -> Maybe Int
-aStarShortest start end terrain =
-  search $ Search
-    { candidates = Q.singleton 0 start
-    , pathScores = Map.singleton start 0
-    , heuristics = Map.singleton start $ distance start end
-    }
+shortestPathDijkstra :: Coord -> Coord -> Terrain -> Maybe Int
+shortestPathDijkstra start end terrain = search Set.empty $ Q.singleton 0 start
   where
-    search :: SearchState -> Maybe Int
-    search Search{ candidates = (Q.minView -> candidatesView), .. } = do
-      (cur, candidates) <- candidatesView
-      if cur == end then pathScores !? cur
-      else do
-        nextPathScore <- pathScores !? cur <&> (+ 1)
-        let nextCandidates = flip filter (neighbours cur terrain) \neighbour ->
-              pathScores !? neighbour & maybe True (> nextPathScore)
-        search $ flip3 foldr nextCandidates Search{..}
-          \candidate state ->
-            let nextHeuristic = nextPathScore + distance candidate end in
-            state
-              & _pathScores %~ Map.insert candidate nextPathScore
-              & _heuristics %~ Map.insert candidate nextHeuristic
-              & _candidates %~ addUnique nextHeuristic candidate
+    search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
+    search visited (Q.minViewWithKey -> unvisitedView) = do
+      ((score, cur), unvisited) <- unvisitedView
+      if cur == end then return score
+      else if cur `Set.member` visited then search visited unvisited
+      else search (Set.insert cur visited)
+        $ foldr (Q.insert $ score + 1) unvisited
+        $ filter (not . (`Set.member` visited)) $ neighbours cur terrain
 
 neighbours :: Coord -> Terrain -> [Coord]
 neighbours coord@(row, col) terrain = nub do
@@ -89,9 +62,3 @@ neighbours coord@(row, col) terrain = nub do
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
   flip filter [(row', col), (row, col')] $ \c -> abs (h - terrain ! c) <= 1
   where h = terrain ! coord
-
-distance :: Coord -> Coord -> Int
-distance (y1, x1) (y2, x2) = abs (y2 - y1) + abs (x2 - x1)
-
-addUnique :: (Ord k, Eq a) => k -> a -> MinPQueue k a -> MinPQueue k a
-addUnique k a q = if a `elem` Q.elemsU q then q else Q.insert k a q

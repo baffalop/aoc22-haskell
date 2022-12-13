@@ -49,11 +49,11 @@ shortestPathDijkstra :: Coord -> (Coord -> Bool) -> Terrain -> Maybe Int
 shortestPathDijkstra from isTarget terrain = search Set.empty $ Q.singleton 0 from
   where
     search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
-    search visited = Q.minViewWithKey >=> \((score, cur), unvisited) ->
+    search visited = Q.minViewWithKey >=> \((score, cur), candidates) ->
       if isTarget cur then return score
-      else if cur `Set.member` visited then search visited unvisited
+      else if cur `Set.member` visited then search visited candidates
       else search (Set.insert cur visited)
-        $ foldr (Q.insert $ score + 1) unvisited
+        $ foldr (Q.insert $ score + 1) candidates
         $ filter (not . (`Set.member` visited)) $ neighbours cur terrain
 
 neighbours :: Coord -> Terrain -> [Coord]

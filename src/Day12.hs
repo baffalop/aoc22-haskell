@@ -60,5 +60,5 @@ neighbours :: Coord -> Terrain -> [Coord]
 neighbours coord@(row, col) terrain = nub do
   row' <- filter (`within` (1, Mx.nrows terrain)) [row - 1, row + 1]
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
-  flip filter [(row', col), (row, col')] $ \c -> h - terrain ! c <= 1
+  flip filter [(row', col), (row, col')] \c -> h - terrain ! c <= 1
   where h = terrain ! coord

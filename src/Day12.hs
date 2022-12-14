@@ -46,10 +46,10 @@ parse (lines . unpack -> map) = do
       return $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
-solve1 Hill{..} = shortestPathDijkstra start (== end) $ neighboursIn terrain (-)
+solve1 Hill{..} = shortestPathDijkstra start (== end) $ neighboursIn terrain subtract
 
 solve2 :: Hill -> Maybe Int
-solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) $ neighboursIn terrain (flip (-))
+solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) $ neighboursIn terrain (-)
 
 shortestPathDijkstra :: Coord -> (Coord -> Bool) -> (Coord -> [Coord]) -> Maybe Int
 shortestPathDijkstra from isTarget neighbours = search Set.empty $ Q.singleton 0 from
@@ -87,11 +87,13 @@ neighboursIn :: Terrain -> (Int -> Int -> Int) -> Coord -> [Coord]
 neighboursIn terrain gradient coord@(row, col) = nub do
   row' <- filter (`within` (1, Mx.nrows terrain)) [row - 1, row + 1]
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
-  flip filter [(row', col), (row, col')] \c -> gradient (terrain ! c) h <= 1
+  flip filter [(row', col), (row, col')] \c -> gradient h (terrain ! c) <= 1
   where h = terrain ! coord
 
 distance :: Coord -> Coord -> Int
 distance (y1, x1) (y2, x2) = abs (y2 - y1) + abs (x2 - x1)
+
+{- Debug tracing:
 
 data DebugLoc = Height Int | Visited Int
 instance Show DebugLoc where
@@ -109,3 +111,5 @@ debugMatrix :: Terrain -> [Coord] -> Matrix DebugLoc
 debugMatrix terrain visited = Mx.fromLists $
   flip3 foldr visited (Mx.toLists $ Height <$> terrain)
     \(both (subtract 1) -> (row, col)) -> ix row . ix col %~ visit
+
+-}

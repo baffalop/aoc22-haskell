@@ -20,7 +20,8 @@ import Data.Tuple.Extra (both, uncurry3)
 import Control.Monad ((>=>))
 import Data.Function.Flip (flip3)
 import Data.Functor ((<&>))
-import Lens.Micro.Platform (_1, _2, _3, (%~))
+import Lens.Micro.Platform (_1, _2, _3, ix, (%~))
+import qualified Debug.Trace
 
 type Terrain = Matrix Int
 type Coord = (Int, Int)
@@ -68,6 +69,7 @@ shortestPathAStar start end terrain =
     search :: Map Coord Int -> Map Coord Int -> MinPQueue Int Coord -> Maybe Int
     search pathScores heuristics (Q.minView -> candidatesView) = do
       (cur, candidates) <- candidatesView
+      -- Debug.Trace.traceShowM $ debugMatrix (Map.keys pathScores) terrain
       if cur == end then pathScores !? cur
       else do
         nextPathScore <- pathScores !? cur <&> (+ 1)
@@ -89,3 +91,20 @@ neighbours gradient coord@(row, col) terrain = nub do
 
 distance :: Coord -> Coord -> Int
 distance (y1, x1) (y2, x2) = abs (y2 - y1) + abs (x2 - x1)
+
+data DebugLoc = Height Int | Visited Int
+instance Show DebugLoc where
+  show = \case
+    (Height v) -> show v
+    (Visited (show -> [v])) -> [v, '#']
+    (Visited (show -> (_:v))) -> '#':v
+    _ -> ""
+
+visit :: DebugLoc -> DebugLoc
+visit (Height v) = Visited v
+visit x = x
+
+debugMatrix :: [Coord] -> Terrain -> Matrix DebugLoc
+debugMatrix visited terrain = Mx.fromLists $
+  flip3 foldr visited (Mx.toLists $ Height <$> terrain)
+    \(both (subtract 1) -> (row, col)) -> ix row . ix col %~ visit

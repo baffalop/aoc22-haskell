@@ -52,8 +52,7 @@ solve2 :: Hill -> Maybe Int
 solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) $ neighboursIn terrain (flip (-))
 
 shortestPathDijkstra :: Coord -> (Coord -> Bool) -> (Coord -> [Coord]) -> Maybe Int
-shortestPathDijkstra from isTarget neighbours =
-  search Set.empty $ Q.singleton 0 from
+shortestPathDijkstra from isTarget neighbours = search Set.empty $ Q.singleton 0 from
   where
     search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
     search visited = Q.minViewWithKey >=> \((score, cur), candidates) ->

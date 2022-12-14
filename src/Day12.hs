@@ -45,7 +45,7 @@ parse (lines . unpack -> map) = do
       return $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
-solve1 Hill{..} = shortestPathAStar end start terrain
+solve1 Hill{..} = shortestPathAStar start end terrain
 
 solve2 :: Hill -> Maybe Int
 solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) terrain
@@ -59,7 +59,7 @@ shortestPathDijkstra from isTarget terrain = search Set.empty $ Q.singleton 0 fr
       else if cur `Set.member` visited then search visited candidates
       else search (Set.insert cur visited)
         $ foldr (Q.insert $ score + 1) candidates
-        $ filter (not . (`Set.member` visited)) $ neighbours cur terrain
+        $ filter (not . (`Set.member` visited)) $ neighbours (-) cur terrain
 
 shortestPathAStar :: Coord -> Coord -> Terrain -> Maybe Int
 shortestPathAStar start end terrain =
@@ -71,7 +71,7 @@ shortestPathAStar start end terrain =
       if cur == end then pathScores !? cur
       else do
         nextPathScore <- pathScores !? cur <&> (+ 1)
-        let nextCandidates = flip filter (neighbours cur terrain) \neighbour ->
+        let nextCandidates = flip filter (neighbours (flip (-)) cur terrain) \neighbour ->
               pathScores !? neighbour & maybe True (> nextPathScore)
         uncurry3 search $ flip3 foldr nextCandidates (pathScores, heuristics, candidates)
           \candidate ->
@@ -80,11 +80,11 @@ shortestPathAStar start end terrain =
             . (_2 %~ Map.insert candidate nextHeuristic)
             . (_3 %~ Q.insert nextHeuristic candidate)
 
-neighbours :: Coord -> Terrain -> [Coord]
-neighbours coord@(row, col) terrain = nub do
+neighbours :: (Int -> Int -> Int) -> Coord -> Terrain -> [Coord]
+neighbours gradient coord@(row, col) terrain = nub do
   row' <- filter (`within` (1, Mx.nrows terrain)) [row - 1, row + 1]
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
-  flip filter [(row', col), (row, col')] \c -> h - terrain ! c <= 1
+  flip filter [(row', col), (row, col')] \c -> gradient h (terrain ! c) <= 1
   where h = terrain ! coord
 
 distance :: Coord -> Coord -> Int

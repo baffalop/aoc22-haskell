@@ -1,5 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
-
 module Day13 (parse, solve1, solve2) where
 
 import Data.Text (Text)
@@ -14,7 +12,6 @@ type Input = [(Packet, Packet)]
 data Nested a = One a | Some [Nested a] deriving (Show, Eq)
 
 instance Ord a => Ord (Nested a) where
-  compare :: Nested a -> Nested a -> Ordering
   compare = curry $ \case
     (One a, One b) -> compare a b
     (One a, Some bs) -> compare [One a] bs

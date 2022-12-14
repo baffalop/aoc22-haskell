@@ -46,34 +46,36 @@ parse (lines . unpack -> map) = do
       return $ both (+ 1) (y, x)
 
 solve1 :: Hill -> Maybe Int
-solve1 Hill{..} = shortestPathAStar start end terrain
+solve1 Hill{..} = shortestPathDijkstra start (== end) $ neighboursIn terrain (-)
 
 solve2 :: Hill -> Maybe Int
-solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) terrain
+solve2 Hill{..} = shortestPathDijkstra end ((== 0) . (terrain !)) $ neighboursIn terrain (flip (-))
 
-shortestPathDijkstra :: Coord -> (Coord -> Bool) -> Terrain -> Maybe Int
-shortestPathDijkstra from isTarget terrain = search Set.empty $ Q.singleton 0 from
+shortestPathDijkstra :: Coord -> (Coord -> Bool) -> (Coord -> [Coord]) -> Maybe Int
+shortestPathDijkstra from isTarget neighbours =
+  search Set.empty $ Q.singleton 0 from
   where
     search :: Set Coord -> MinPQueue Int Coord -> Maybe Int
     search visited = Q.minViewWithKey >=> \((score, cur), candidates) ->
+      -- Debug.Trace.traceShowM $ debugMatrix terrain $ Set.toList visited
       if isTarget cur then return score
       else if cur `Set.member` visited then search visited candidates
       else search (Set.insert cur visited)
         $ foldr (Q.insert $ score + 1) candidates
-        $ filter (not . (`Set.member` visited)) $ neighbours (-) cur terrain
+        $ filter (not . (`Set.member` visited)) $ neighbours cur
 
-shortestPathAStar :: Coord -> Coord -> Terrain -> Maybe Int
-shortestPathAStar start end terrain =
+shortestPathAStar :: Coord -> Coord -> (Coord -> [Coord]) -> Maybe Int
+shortestPathAStar start end neighbours =
   search (Map.singleton start 0) (Map.singleton start $ distance start end) (Q.singleton 0 start)
   where
     search :: Map Coord Int -> Map Coord Int -> MinPQueue Int Coord -> Maybe Int
     search pathScores heuristics (Q.minView -> candidatesView) = do
       (cur, candidates) <- candidatesView
-      -- Debug.Trace.traceShowM $ debugMatrix (Map.keys pathScores) terrain
+      -- Debug.Trace.traceShowM $ debugMatrix terrain $ Map.keys pathScores
       if cur == end then pathScores !? cur
       else do
         nextPathScore <- pathScores !? cur <&> (+ 1)
-        let nextCandidates = flip filter (neighbours (flip (-)) cur terrain) \neighbour ->
+        let nextCandidates = flip filter (neighbours cur) \neighbour ->
               pathScores !? neighbour & maybe True (> nextPathScore)
         uncurry3 search $ flip3 foldr nextCandidates (pathScores, heuristics, candidates)
           \candidate ->
@@ -82,11 +84,11 @@ shortestPathAStar start end terrain =
             . (_2 %~ Map.insert candidate nextHeuristic)
             . (_3 %~ Q.insert nextHeuristic candidate)
 
-neighbours :: (Int -> Int -> Int) -> Coord -> Terrain -> [Coord]
-neighbours gradient coord@(row, col) terrain = nub do
+neighboursIn :: Terrain -> (Int -> Int -> Int) -> Coord -> [Coord]
+neighboursIn terrain gradient coord@(row, col) = nub do
   row' <- filter (`within` (1, Mx.nrows terrain)) [row - 1, row + 1]
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
-  flip filter [(row', col), (row, col')] \c -> gradient h (terrain ! c) <= 1
+  flip filter [(row', col), (row, col')] \c -> gradient (terrain ! c) h <= 1
   where h = terrain ! coord
 
 distance :: Coord -> Coord -> Int
@@ -104,7 +106,7 @@ visit :: DebugLoc -> DebugLoc
 visit (Height v) = Visited v
 visit x = x
 
-debugMatrix :: [Coord] -> Terrain -> Matrix DebugLoc
-debugMatrix visited terrain = Mx.fromLists $
+debugMatrix :: Terrain -> [Coord] -> Matrix DebugLoc
+debugMatrix terrain visited = Mx.fromLists $
   flip3 foldr visited (Mx.toLists $ Height <$> terrain)
     \(both (subtract 1) -> (row, col)) -> ix row . ix col %~ visit

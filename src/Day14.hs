@@ -15,6 +15,8 @@ import Data.Maybe (fromMaybe)
 import Lens.Micro.Platform (makeLensesFor, (%~))
 import Data.List (find)
 import Data.Either.Extra (maybeToEither)
+import qualified Debug.Trace
+import Data.Function ((&))
 
 type Path = [Coord]
 type Line = (Coord, Coord)
@@ -39,7 +41,7 @@ solve1 = pour 0
     pour :: Int -> Cave -> Int
     pour count cave = case flowsIn cave (500, 0) of
       Left _ -> count
-      Right next -> pour (count + 1) $ insertAt next cave
+      Right next -> pour (count + 1) $ addTo cave next
 
 solve2 :: Cave -> Int
 solve2 cave = pour 0 cave
@@ -47,13 +49,13 @@ solve2 cave = pour 0 cave
     pour :: Int -> Cave -> Int
     pour count cave
       | dropsTo (500, 0) cave == Just (500, 0) = count + 1
-      | otherwise = pour (count + 1) $ flip insertAt cave $
+      | otherwise = pour (count + 1) $ addTo cave $
         case flowsIn cave (500, 0) of
           Left x -> (x, floorLevel)
           Right next -> next
 
     floorLevel :: Int
-    floorLevel = floorOf cave - 1
+    floorLevel = Debug.Trace.traceShowId $ floorOf cave - 1
 
 mapCave :: [Path] -> Cave
 mapCave =
@@ -88,10 +90,10 @@ blockedBy :: Cave -> Coord -> Bool
 blockedBy Cave{ rows, cols } (x, y) =
   possibly (Set.member x <$> rows !? y) || possibly (Set.member y <$> cols !? x)
 
-insertAt :: Coord -> Cave -> Cave
-insertAt (x, y) =
-    (_rows %~ Map.insertWith (<>) y (Set.singleton x))
-  . (_cols %~ Map.insertWith (<>) x (Set.singleton y))
+addTo :: Cave -> Coord -> Cave
+addTo cave (x, y) = cave
+  & (_rows %~ Map.insertWith (<>) y (Set.singleton x))
+  & (_cols %~ Map.insertWith (<>) x (Set.singleton y))
 
 floorOf :: Cave -> Int
 floorOf Cave{ rows, cols } = fromMaybe 2 do

@@ -14,6 +14,7 @@ import Data.Tuple.Extra (both)
 import Data.Maybe (fromMaybe)
 import Lens.Micro.Platform (makeLensesFor, (%~))
 import Data.List (find)
+import Data.Either.Extra (maybeToEither)
 
 type Path = [Coord]
 type Line = (Coord, Coord)
@@ -37,11 +38,22 @@ solve1 = pour 0
   where
     pour :: Int -> Cave -> Int
     pour count cave = case flowsIn cave (500, 0) of
-      Nothing -> count
-      Just next -> pour (count + 1) $ insertAt next cave
+      Left _ -> count
+      Right next -> pour (count + 1) $ insertAt next cave
 
 solve2 :: Cave -> Int
-solve2 = undefined
+solve2 cave = pour 0 cave
+  where
+    pour :: Int -> Cave -> Int
+    pour count cave
+      | dropsTo (500, 0) cave == Just (500, 0) = count + 1
+      | otherwise = pour (count + 1) $ flip insertAt cave $
+        case flowsIn cave (500, 0) of
+          Left x -> (x, floorLevel)
+          Right next -> next
+
+    floorLevel :: Int
+    floorLevel = floorOf cave - 1
 
 mapCave :: [Path] -> Cave
 mapCave =
@@ -55,12 +67,12 @@ mapCave =
     cardinal :: [(Int, IntSet)] -> Cardinal
     cardinal = foldr (uncurry $ Map.insertWith Set.union) Map.empty
 
-flowsIn :: Cave -> Coord -> Maybe Coord
+flowsIn :: Cave -> Coord -> Either Int Coord
 flowsIn cave = flow
   where
-    flow :: Coord -> Maybe Coord
+    flow :: Coord -> Either Int Coord
     flow c = do
-      bottom@(x, y) <- dropsTo c cave
+      bottom@(x, y) <- maybeToEither (fst c) $ dropsTo c cave
       case filter (not . blockedBy cave) $ (, y + 1) <$> [x - 1, x + 1] of
         next:_ -> flow next
         _ -> return bottom
@@ -80,6 +92,11 @@ insertAt :: Coord -> Cave -> Cave
 insertAt (x, y) =
     (_rows %~ Map.insertWith (<>) y (Set.singleton x))
   . (_cols %~ Map.insertWith (<>) x (Set.singleton y))
+
+floorOf :: Cave -> Int
+floorOf Cave{ rows, cols } = fromMaybe 2 do
+  (maxRow, _) <- Map.lookupMax rows
+  return $ max maxRow (Set.findMax $ foldr1 (<>) cols) + 2
 
 possibly :: Maybe Bool -> Bool
 possibly = fromMaybe False

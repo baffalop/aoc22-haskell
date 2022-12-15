@@ -7,10 +7,10 @@ import Data.IntMap (IntMap, (!?))
 import qualified Data.IntMap as Map
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as Set
-import Utils (pairs)
+import Utils (pairs, (<.>))
 import Data.Maybe (fromMaybe)
-import Data.List (find)
 import Data.Either.Extra (maybeToEither)
+import Control.Monad ((<=<))
 
 type Path = [Coord]
 type Line = (Coord, Coord)
@@ -31,18 +31,16 @@ solve1 = pour 0
       Right next -> pour (count + 1) $ next `addTo` cave
 
 solve2 :: Cave -> Int
-solve2 cave = pour 0 cave
+solve2 initCave = pour 1 initCave
   where
     pour :: Int -> Cave -> Int
-    pour count cave
-      | (500, 0) `dropsToIn` cave == Just (500, 0) = count + 1
-      | otherwise = pour (count + 1) $ (`addTo` cave) $
-        case flowsIn cave (500, 0) of
-          Left x -> (x, floorLevel)
-          Right next -> next
+    pour count cave = case flowsIn cave (500, 0) of
+      Left x -> pour (count + 1) $ (`addTo` cave) (x, floorLevel)
+      Right (500, 0) -> count
+      Right next -> pour (count + 1) $ (`addTo` cave) next
 
     floorLevel :: Int
-    floorLevel = Set.findMax (foldr1 (<>) cave) + 1
+    floorLevel = Set.findMax (foldr1 (<>) initCave) + 1
 
 mapCave :: [Path] -> Cave
 mapCave = Map.fromListWith (<>) . foldMap columns . foldMap pairs
@@ -63,10 +61,7 @@ flowsIn cave = flow
         _ -> return bottom
 
 dropsToIn :: (Int, Int) -> Cave -> Maybe Coord
-dropsToIn (x, y) cave = do
-  col <- cave !? x
-  ground <- find (> y) $ Set.toList col
-  return (x, ground - 1)
+dropsToIn (x, y) = (x,) . subtract 1 <.> Set.lookupGT y <=< (!? x)
 
 blockedBy :: Coord -> Cave -> Bool
 blockedBy (x, y) cave = possibly $ Set.member y <$> cave !? x

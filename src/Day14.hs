@@ -54,8 +54,8 @@ flowsIn :: Cave -> Coord -> Either Int Coord
 flowsIn cave = flow
   where
     flow :: Coord -> Either Int Coord
-    flow c = do
-      bottom@(x, y) <- maybeToEither (fst c) $ c `dropsToIn` cave
+    flow c@(originX, _) = do
+      bottom@(x, y) <- maybeToEither originX $ c `dropsToIn` cave
       case filter (not . (`blockedBy` cave)) $ (, y + 1) <$> [x - 1, x + 1] of
         next:_ -> flow next
         _ -> return bottom

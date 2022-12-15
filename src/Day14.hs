@@ -27,16 +27,16 @@ solve1 = pour 0
     pour :: Int -> Cave -> Int
     pour count cave = case flowsIn cave (500, 0) of
       Left _ -> count
-      Right next -> pour (count + 1) $ next `addTo` cave
+      Right next -> pour (count + 1) $ insert next cave
 
 solve2 :: Cave -> Int
 solve2 initCave = pour 1 initCave
   where
     pour :: Int -> Cave -> Int
     pour count cave = case flowsIn cave (500, 0) of
-      Left x -> pour (count + 1) $ (`addTo` cave) (x, floorLevel)
+      Left x -> pour (count + 1) $ insert (x, floorLevel) cave
       Right (500, 0) -> count
-      Right next -> pour (count + 1) $ (`addTo` cave) next
+      Right next -> pour (count + 1) $ insert next cave
 
     floorLevel :: Int
     floorLevel = Set.findMax (foldr1 (<>) initCave) + 1
@@ -68,8 +68,8 @@ dropsToIn (x, y) cave = do
 blockedBy :: Coord -> Cave -> Bool
 blockedBy (x, y) cave = possibly $ Set.member y <$> cave !? x
 
-addTo :: Coord -> Cave -> Cave
-addTo (x, y) = Map.insertWith (<>) x $ Set.singleton y
+insert :: Coord -> Cave -> Cave
+insert (x, y) = Map.insertWith (<>) x $ Set.singleton y
 
 possibly :: Maybe Bool -> Bool
 possibly = fromMaybe False

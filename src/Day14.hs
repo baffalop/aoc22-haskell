@@ -2,7 +2,7 @@ module Day14 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
-import Parsing (pairBy)
+import Parsing (pairBy, linesOf)
 import Data.IntMap (IntMap, (!?))
 import qualified Data.IntMap as Map
 import Data.IntSet (IntSet)
@@ -18,8 +18,8 @@ type Coord = (Int, Int)
 type Cave = IntMap IntSet
 
 parse :: Text -> Either String Cave
-parse = P.parseOnly $ mapCave <$>
-  (pairBy ',' P.decimal `P.sepBy` P.string " -> ") `P.sepBy` P.endOfLine
+parse = P.parseOnly $
+  mapCave <$> linesOf (pairBy ',' P.decimal `P.sepBy` P.string " -> ")
 
 solve1 :: Cave -> Int
 solve1 = pour 0

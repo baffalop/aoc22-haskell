@@ -7,10 +7,9 @@ import Data.IntMap (IntMap, (!?))
 import qualified Data.IntMap as Map
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as Set
-import Utils (pairs, (<.>))
+import Utils (pairs)
 import Data.Maybe (fromMaybe)
 import Data.Either.Extra (maybeToEither)
-import Control.Monad ((<=<))
 
 type Path = [Coord]
 type Line = (Coord, Coord)
@@ -61,7 +60,10 @@ flowsIn cave = flow
         [] -> return bottom
 
 dropsToIn :: (Int, Int) -> Cave -> Maybe Coord
-dropsToIn (x, y) = (x,) . subtract 1 <.> Set.lookupGT y <=< (!? x)
+dropsToIn (x, y) cave = do
+  col <- cave !? x
+  ground <- Set.lookupGT y col
+  return (x, ground - 1)
 
 blockedBy :: Coord -> Cave -> Bool
 blockedBy (x, y) cave = possibly $ Set.member y <$> cave !? x

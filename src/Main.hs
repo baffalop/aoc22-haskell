@@ -25,6 +25,7 @@ import qualified Day11
 import qualified Day12
 import qualified Day13
 import qualified Day14
+import qualified Day15
 
 newtype SessionKey = Key String
 type Solution = Text -> Either String Answer
@@ -84,6 +85,7 @@ solve day = case dayInt day of
   12 -> eitherSolution Day12.parse Day12.solve1 Day12.solve2
   13 -> eitherSolution Day13.parse Day13.solve1 Day13.solve2
   14 -> eitherSolution Day14.parse Day14.solve1 Day14.solve2
+  15 -> eitherSolution Day15.parse Day15.solve1 Day15.solve2
   d -> error $ "No solution for day " <> show d <> " yet"
 
 simpleSolution :: (Show a, Show b, Show c) => (Text -> a) -> (a -> b) -> (a -> c) -> Solution

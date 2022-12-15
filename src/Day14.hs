@@ -58,7 +58,7 @@ flowsIn cave = flow
       bottom@(x, y) <- maybeToEither originX $ c `dropsToIn` cave
       case filter (not . (`blockedBy` cave)) $ (, y + 1) <$> [x - 1, x + 1] of
         next:_ -> flow next
-        _ -> return bottom
+        [] -> return bottom
 
 dropsToIn :: (Int, Int) -> Cave -> Maybe Coord
 dropsToIn (x, y) = (x,) . subtract 1 <.> Set.lookupGT y <=< (!? x)

@@ -15,7 +15,7 @@ import Data.Either.Extra (maybeToEither)
 import Data.Function ((&))
 import Data.List (elemIndex, nub)
 import Data.Maybe (isJust)
-import Utils (indexedFind, within)
+import Utils (indexedFind, within, manhattanDistance)
 import Data.Tuple.Extra (both, uncurry3)
 import Control.Monad ((>=>))
 import Data.Function.Flip (flip3)
@@ -65,7 +65,7 @@ shortestPathDijkstra from isTarget neighbours = search Set.empty $ Q.singleton 0
 
 shortestPathAStar :: Coord -> Coord -> (Coord -> [Coord]) -> Maybe Int
 shortestPathAStar start end neighbours =
-  search (Map.singleton start 0) (Map.singleton start $ distance start end) (Q.singleton 0 start)
+  search (Map.singleton start 0) (Map.singleton start $ manhattanDistance start end) (Q.singleton 0 start)
   where
     search :: Map Coord Int -> Map Coord Int -> MinPQueue Int Coord -> Maybe Int
     search pathScores heuristics (Q.minView -> candidatesView) = do
@@ -78,7 +78,7 @@ shortestPathAStar start end neighbours =
               pathScores !? neighbour & maybe True (> nextPathScore)
         uncurry3 search $ flip3 foldr nextCandidates (pathScores, heuristics, candidates)
           \candidate ->
-            let nextHeuristic = nextPathScore + distance candidate end in
+            let nextHeuristic = nextPathScore + manhattanDistance candidate end in
               (_1 %~ Map.insert candidate nextPathScore)
             . (_2 %~ Map.insert candidate nextHeuristic)
             . (_3 %~ Q.insert nextHeuristic candidate)
@@ -89,9 +89,6 @@ neighboursIn terrain gradient coord@(row, col) = nub do
   col' <- filter (`within` (1, Mx.ncols terrain)) [col - 1, col + 1]
   flip filter [(row', col), (row, col')] \c -> gradient (terrain ! c - h) <= 1
   where h = terrain ! coord
-
-distance :: Coord -> Coord -> Int
-distance (y1, x1) (y2, x2) = abs (y2 - y1) + abs (x2 - x1)
 
 {- Debug tracing:
 

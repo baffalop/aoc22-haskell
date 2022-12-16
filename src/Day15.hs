@@ -8,12 +8,17 @@ import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Utils (manhattanDistance)
+import Data.Interval (Interval, (<=..<=), Extended(..))
+import qualified Data.Interval as I
+import Data.IntervalSet (IntervalSet)
+import qualified Data.IntervalSet as IS
+import Utils (manhattanDistance, (<.>))
+import Data.Function.Syntax ((.:))
 
-type Coord = (Int, Int)
+type Coord = (Integer, Integer)
 
 data Scan = Scan
- { sensors :: Map Coord Int
+ { sensors :: Map Coord Integer
  , beacons :: Set Coord
  } deriving (Show)
 
@@ -32,11 +37,26 @@ parse = P.parseOnly $ mconcat <$> linesOf do
     , beacons = Set.singleton beacon
     }
   where
-    n :: P.Parser Int
+    n :: Integral i => P.Parser i
     n = P.signed P.decimal
 
-solve1 :: Scan -> Int
-solve1 = undefined
+solve1 :: Scan -> Integer
+solve1 Scan{ sensors, beacons } = visible - beaconCount
+  where
+    visible = positionsIn $ visibleOn y sensors
+    beaconCount = toInteger $ Set.size $ Set.filter ((== y) . snd) beacons
+    y = 2000000
 
-solve2 :: Scan -> Int
+solve2 :: Scan -> Integer
 solve2 = undefined
+
+visibleOn :: Integer -> Map Coord Integer -> IntervalSet Integer
+visibleOn y = Map.foldrWithKey (IS.insert .: seesOn y) IS.empty
+
+seesOn :: Integer -> Coord -> Integer -> Interval Integer
+seesOn y (sensorX, sensorY) range =
+  let xRange = range - abs (sensorY - y) in
+  Finite (sensorX - xRange) <=..<= Finite (sensorX + xRange)
+
+positionsIn :: IntervalSet Integer -> Integer
+positionsIn = sum . ((+ 1) . I.width <.> IS.toList)

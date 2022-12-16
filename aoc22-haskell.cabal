@@ -54,6 +54,7 @@ executable aoc22-haskell
     , base >=4.7 && <5
     , composition-extra
     , containers
+    , data-interval
     , extra
     , matrix
     , microlens-platform

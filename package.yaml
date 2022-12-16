@@ -16,6 +16,7 @@ dependencies:
   - attoparsec
   - composition-extra
   - containers
+  - data-interval
   - extra
   - matrix
   - microlens-platform

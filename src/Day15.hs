@@ -12,8 +12,10 @@ import Data.Interval (Interval, (<=..<=), Extended(..))
 import qualified Data.Interval as I
 import Data.IntervalSet (IntervalSet)
 import qualified Data.IntervalSet as IS
-import Utils (manhattanDistance, (<.>))
+import Utils (manhattanDistance, (<.>), within)
 import Data.Function.Syntax ((.:))
+import Safe (headMay)
+import Data.Tuple.Extra (both)
 
 type Coord = (Integer, Integer)
 
@@ -47,8 +49,17 @@ solve1 Scan{ sensors, beacons } = visible - beaconCount
     beaconCount = toInteger $ Set.size $ Set.filter ((== y) . snd) beacons
     y = 2000000
 
-solve2 :: Scan -> Integer
-solve2 = undefined
+solve2 :: Scan -> Maybe Integer
+solve2 = uncurry (*) <.> headMay
+  . Set.toList . Set.filter (uncurry (&&) . both (`within` limits))
+  . Map.foldrWithKey (Set.intersection .: perimeter) Set.empty . sensors
+  where
+    limits = (0, 4000000)
+
+perimeter :: Coord -> Integer -> Set Coord
+perimeter (x, y) ((+ 1) -> range) =
+  Set.fromList $ flip foldMap [-range..range] \offset ->
+    [(x + offset, y + (range - offset)), (x + offset, y - (range - offset))]
 
 visibleOn :: Integer -> Map Coord Integer -> IntervalSet Integer
 visibleOn y = Map.foldrWithKey (IS.insert .: seesOn y) IS.empty

@@ -35,5 +35,5 @@ partitionWith f = flip foldr ([], []) \x (lefts, rights) ->
 pairs :: [a] -> [(a, a)]
 pairs = zip <$> id <*> drop 1
 
-manhattanDistance :: (Int, Int) -> (Int, Int) -> Int
+manhattanDistance :: Num n => (n, n) -> (n, n) -> n
 manhattanDistance (y1, x1) (y2, x2) = abs (y2 - y1) + abs (x2 - x1)

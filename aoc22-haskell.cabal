@@ -34,6 +34,7 @@ executable aoc22-haskell
       Day13
       Day14
       Day15
+      Day16
       Parsing
       Utils
       Paths_aoc22_haskell

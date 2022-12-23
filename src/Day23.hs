@@ -14,12 +14,13 @@ import Data.Tuple.Extra (both)
 import Control.Monad (guard)
 import Utils (nTimes, (<.>), pairs)
 import Data.List (findIndex)
+import Data.List.Extra (enumerate)
 
 type Input = Set Coord
 type Coord = (Int, Int)
 
 data Dir = North | South | West | East
-  deriving (Show, Enum)
+  deriving (Show, Enum, Bounded)
 
 parse :: Text -> Input
 parse = ifoldr build Set.empty . lines . unpack
@@ -31,10 +32,10 @@ parse = ifoldr build Set.empty . lines . unpack
       coords line
 
 solve1 :: Input -> Int
-solve1 = emptySpace . snd . nTimes 10 disperse . ([North .. East],)
+solve1 = emptySpace . snd . nTimes 10 disperse . (enumerate,)
 
 solve2 :: Input -> Maybe Int
-solve2 = (+ 1) <.> findIndex (uncurry (==)) . pairs . (snd <.> iterate disperse . ([North .. East],))
+solve2 = (+ 1) <.> findIndex (uncurry (==)) . pairs . (snd <.> iterate disperse . (enumerate,))
 
 disperse :: ([Dir], Set Coord) -> ([Dir], Set Coord)
 disperse (dirs, coords) =

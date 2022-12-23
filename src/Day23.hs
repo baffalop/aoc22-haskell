@@ -12,6 +12,8 @@ import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
 import Data.Tuple.Extra (both)
 import Control.Monad (guard)
+import Utils (nTimes, (<.>), pairs)
+import Data.List (findIndex)
 
 type Input = Set Coord
 type Coord = (Int, Int)
@@ -29,17 +31,16 @@ parse = ifoldr build Set.empty . lines . unpack
       coords line
 
 solve1 :: Input -> Int
-solve1 = emptySpace . run 10 [North .. East]
+solve1 = emptySpace . snd . nTimes 10 disperse . ([North .. East],)
 
-solve2 :: Input -> Int
-solve2 = undefined
+solve2 :: Input -> Maybe Int
+solve2 = (+ 1) <.> findIndex (uncurry (==)) . pairs . (snd <.> iterate disperse . ([North .. East],))
 
-run :: Int -> [Dir] -> Set Coord -> Set Coord
-run 0 _ coords = coords
-run n dirs coords =
-  run (n - 1) (rotate dirs)
-    $ Map.foldrWithKey makeMove coords
-    $ foldr proposeMove Map.empty coords
+disperse :: ([Dir], Set Coord) -> ([Dir], Set Coord)
+disperse (dirs, coords) =
+  ( rotate dirs
+  , Map.foldrWithKey makeMove coords $ foldr proposeMove Map.empty coords
+  )
   where
     makeMove :: Coord -> [Coord] -> Set Coord -> Set Coord
     makeMove new [old] = Set.delete old . Set.insert new

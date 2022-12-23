@@ -43,7 +43,7 @@ run n dirs coords =
 
     addMove :: Coord -> Map Coord [Coord] -> Map Coord [Coord]
     addMove coord =
-      maybe id (append coord . toVector) $ find (all isFree . lookIn) dirs
+      maybe id (append coord . add coord . toVector) $ find (all isFree . lookIn coord) dirs
 
     isFree :: Coord -> Bool
     isFree = not . (`Set.member` coords)
@@ -56,8 +56,8 @@ area coords =
   let (xs, ys) = (Set.map fst &&& Set.map snd) coords in
   (Set.findMax xs - Set.findMin xs + 1) * (Set.findMax ys - Set.findMin ys + 1)
 
-lookIn :: Dir -> [Coord]
-lookIn dir = inDirection dir <$> [-1 .. 1]
+lookIn :: Coord -> Dir -> [Coord]
+lookIn coord dir = add coord . inDirection dir <$> [-1 .. 1]
 
 toVector :: Dir -> Coord
 toVector dir = inDirection dir 0
@@ -77,3 +77,6 @@ append x k = flip Map.alter k $ Just . (x :) . fromMaybe []
 
 ifoldr :: ((Int, a) -> b -> b) -> b -> [a] -> b
 ifoldr f initial = foldr f initial . zip [0..]
+
+add :: Coord -> Coord -> Coord
+add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)

@@ -32,16 +32,14 @@ parse = ifoldr build Set.empty . lines . unpack
       coords line
 
 solve1 :: Input -> Int
-solve1 = emptySpace . snd . nTimes 10 disperse . (enumerate,)
+solve1 = emptySpace . nTimesWith 10 enumerate rotate disperse
 
 solve2 :: Input -> Maybe Int
-solve2 = (+ 1) <.> findIndex (uncurry (==)) . pairs . (snd <.> iterate disperse . (enumerate,))
+solve2 = (+ 1) <.> findIndex (uncurry (==)) . pairs . iterateWith enumerate rotate disperse
 
-disperse :: ([Dir], Set Coord) -> ([Dir], Set Coord)
-disperse (dirs, coords) =
-  ( rotate dirs
-  , Map.foldrWithKey makeMove coords $ foldr proposeMove Map.empty coords
-  )
+disperse :: [Dir] -> Set Coord -> Set Coord
+disperse dirs coords =
+  Map.foldrWithKey makeMove coords $ foldr proposeMove Map.empty coords
   where
     makeMove :: Coord -> [Coord] -> Set Coord -> Set Coord
     makeMove new [old] = Set.delete old . Set.insert new
@@ -83,11 +81,17 @@ rotate = take 4 . drop 1 . cycle
 append :: Ord k => a -> k -> Map k [a] -> Map k [a]
 append x k = flip Map.alter k $ Just . (x :) . fromMaybe []
 
+add :: Coord -> Coord -> Coord
+add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+
 ifoldr :: ((Int, a) -> b -> b) -> b -> [a] -> b
 ifoldr f initial = foldr f initial . zip [0..]
 
-add :: Coord -> Coord -> Coord
-add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+nTimesWith :: Int -> b -> (b -> b) -> (b -> a -> a) -> a -> a
+nTimesWith n initial g f = snd . nTimes n (\(b, a) -> (g b, f b a)) . (initial,)
+
+iterateWith :: b -> (b -> b) -> (b -> a -> a) -> a -> [a]
+iterateWith initial g f = snd <.> iterate (\(b, a) -> (g b, f b a)) . (initial,)
 
 -- debugging
 

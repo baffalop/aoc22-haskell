@@ -87,6 +87,8 @@ ifoldr f initial = foldr f initial . zip [0..]
 add :: Coord -> Coord -> Coord
 add (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
+{- debugging
+
 data Sq = Elf | Empty
 instance Show Sq where
   show Elf = "#"
@@ -100,3 +102,5 @@ viz coords =
     dimensions@(xs, ys) = (Set.map fst &&& Set.map snd) coords
     (minX, minY) = both Set.findMin dimensions
     (width, height) = (Set.findMax xs - minX + 1, Set.findMax ys - minY + 1)
+
+-- -}

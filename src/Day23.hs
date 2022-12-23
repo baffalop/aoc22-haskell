@@ -11,6 +11,7 @@ import Control.Arrow ((&&&))
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
 import Data.Tuple.Extra (both)
+import Control.Monad (guard)
 
 type Input = Set Coord
 type Coord = (Int, Int)
@@ -38,15 +39,17 @@ run 0 _ coords = coords
 run n dirs coords =
   run (n - 1) (rotate dirs)
     $ Map.foldrWithKey makeMove coords
-    $ foldr addMove Map.empty coords
+    $ foldr proposeMove Map.empty coords
   where
     makeMove :: Coord -> [Coord] -> Set Coord -> Set Coord
     makeMove new [old] = Set.delete old . Set.insert new
     makeMove _ _ = id
 
-    addMove :: Coord -> Map Coord [Coord] -> Map Coord [Coord]
-    addMove coord =
-      maybe id (append coord . add coord . toVector) $ find (all isFree . lookIn coord) dirs
+    proposeMove :: Coord -> Map Coord [Coord] -> Map Coord [Coord]
+    proposeMove coord = fromMaybe id do
+      guard $ not $ all isFree $ foldMap (lookFrom coord) dirs
+      move <- find (all isFree . lookFrom coord) dirs
+      return $ append coord $ add coord $ toVector move
 
     isFree :: Coord -> Bool
     isFree = not . (`Set.member` coords)
@@ -59,8 +62,8 @@ area coords =
   let (xs, ys) = (Set.map fst &&& Set.map snd) coords in
   (Set.findMax xs - Set.findMin xs + 1) * (Set.findMax ys - Set.findMin ys + 1)
 
-lookIn :: Coord -> Dir -> [Coord]
-lookIn coord dir = add coord . inDirection dir <$> [-1 .. 1]
+lookFrom :: Coord -> Dir -> [Coord]
+lookFrom coord dir = add coord . inDirection dir <$> [-1 .. 1]
 
 toVector :: Dir -> Coord
 toVector dir = inDirection dir 0

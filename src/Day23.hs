@@ -48,8 +48,8 @@ disperse dirs coords =
     proposeMove :: Coord -> Map Coord [Coord] -> Map Coord [Coord]
     proposeMove coord = fromMaybe id do
       guard $ not $ all isFree $ foldMap (lookFrom coord) dirs
-      move <- find (all isFree . lookFrom coord) dirs
-      return $ append coord $ add coord $ toVector move
+      dir <- find (all isFree . lookFrom coord) dirs
+      return $ append coord $ moveIn dir coord
 
     isFree :: Coord -> Bool
     isFree = not . (`Set.member` coords)
@@ -65,8 +65,8 @@ area coords =
 lookFrom :: Coord -> Dir -> [Coord]
 lookFrom coord dir = add coord . inDirection dir <$> [-1 .. 1]
 
-toVector :: Dir -> Coord
-toVector dir = inDirection dir 0
+moveIn :: Dir -> Coord -> Coord
+moveIn dir = add $ inDirection dir 0
 
 inDirection :: Dir -> Int -> Coord
 inDirection = \case

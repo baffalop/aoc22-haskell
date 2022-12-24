@@ -10,6 +10,7 @@ import qualified Data.IntSet as Set
 import Utils (pairs)
 import Data.Maybe (fromMaybe)
 import Data.Either.Extra (maybeToEither)
+import Data.Foldable (find)
 
 type Path = [Coord]
 type Line = (Coord, Coord)
@@ -55,9 +56,9 @@ flowsIn cave = flow
     flow :: Coord -> Either Int Coord
     flow c@(originX, _) = do
       bottom@(x, y) <- maybeToEither originX $ c `dropsToIn` cave
-      case filter (not . (`blockedBy` cave)) $ (, y + 1) <$> [x - 1, x + 1] of
-        next:_ -> flow next
-        [] -> return bottom
+      case find (not . (`blockedBy` cave)) $ (, y + 1) <$> [x - 1, x + 1] of
+        Just next -> flow next
+        Nothing -> return bottom
 
 dropsToIn :: (Int, Int) -> Cave -> Maybe Coord
 dropsToIn (x, y) cave = do

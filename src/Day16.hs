@@ -46,8 +46,8 @@ solve2 :: Valves -> Int
 solve2 = undefined
 
 optimumTo :: Valves -> ValveKey -> ValveKey -> Int -> Set ValveKey -> Maybe Plan
-optimumTo valves origin target t' opened =
-  findOptimum Plan { score = 0, time = t', .. } Set.empty origin
+optimumTo valves origin target startTime opened =
+  findOptimum Plan { score = 0, time = startTime, .. } Set.empty origin
   where
     findOptimum :: Plan -> Set ValveKey -> ValveKey -> Maybe Plan
     findOptimum plan@Plan{ time = 0 } _ _ = Just plan
@@ -67,8 +67,11 @@ optimumTo valves origin target t' opened =
       in
       if cur == target && Set.member cur opened
         then traceShowId $ Just plan
-        else maximumByMay (compare `on` ((*) <$> score <*> time))
+        else maximumOnMay (\Plan{ score, time } -> score * time)
           $ catMaybes
           $ withOpenedValve
           $ findOptimum plan{ time = t - 1 } (Set.insert cur visited)
           <$> filter (not . (`Set.member` visited)) tunnels
+
+maximumOnMay :: Ord b => (a -> b) -> [a] -> Maybe a
+maximumOnMay f = maximumByMay (compare `on` f)

@@ -2,6 +2,7 @@ module Day16 (parse, solve1, solve2) where
 
 import Data.Text (Text)
 import qualified Data.Attoparsec.Text as P
+import Control.Applicative ((<|>))
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Parsing (linesOf, alphaWord)
@@ -21,8 +22,8 @@ data Valve = Valve
 parse :: Text -> Either String Valves
 parse = P.parseOnly $ Map.fromList <$> linesOf do
   key <- Key <$ P.string "Valve " <*> alphaWord
-  flow <- P.string " has flow rate=" *> P.decimal
-  void $ P.string "; tunnels lead to valve" <* P.many' (P.char 's') <* P.string " "
+  flow <- P.string " has flow rate=" *> P.decimal <* P.string "; "
+  void $ P.string "tunnel leads to valve " <|> P.string "tunnels lead to valves "
   tunnels <- (Key <$> alphaWord) `P.sepBy` P.string ", "
   return (key, Valve{..})
 

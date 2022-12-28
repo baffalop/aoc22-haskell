@@ -19,17 +19,17 @@ instance Show Snafu where
   show (Snafu s) = foldMap show $ reverse s
 
 instance Semigroup Snafu where
-  Snafu (S x : xs) <> Snafu (S y : ys) =
-    let
-      (snafit, carry) = case x + y of
-        r | r < -2 -> (r + 5, [S (-1)])
-          | r > 2 -> (r - 5, [S 1])
-          | otherwise -> (r, [])
+  Snafu s1 <> Snafu s2 = Snafu $ add s1 s2
+    where
+      add (S x : xs) (S y : ys) =
+        let
+          (snafit, carry) = case x + y of
+            r | r < -2 -> (r + 5, [S (-1)])
+              | r > 2 -> (r - 5, [S 1])
+              | otherwise -> (r, [])
+        in S snafit : carry `add` xs `add` ys
 
-      Snafu rest = Snafu carry <> Snafu xs <> Snafu ys
-    in Snafu $ S snafit : rest
-
-  Snafu s1 <> Snafu s2 = Snafu $ s1 <|> s2
+      add xs ys = xs <|> ys
 
 instance Monoid Snafu where
   mempty = Snafu []

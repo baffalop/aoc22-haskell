@@ -1,18 +1,22 @@
-module Day17 (parse, solve1, solve2) where
+module Day17 (parse, solve1, solve2, viz) where
 
 import Prelude hiding (drop, ceiling)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Matrix (Matrix)
+import qualified Data.Matrix as Mx
 import Data.Bifunctor (first, second)
 import Data.Maybe (fromMaybe)
+import Data.Tuple (swap)
+import Control.Arrow ((>>>), (***))
 
 data Gust = L | R deriving (Show)
 
 type Coord = (Int, Int)
 
-newtype Block = Block (Set Coord)
-newtype Rock = Rock (Set Coord)
+newtype Block = Block (Set Coord) deriving (Show)
+newtype Rock = Rock (Set Coord) deriving (Show)
 
 parse :: Text -> Either String [Gust]
 parse = traverse gust . head . lines . unpack
@@ -96,3 +100,18 @@ blocks = cycle $ fmap (Block . Set.fromList) <$>
   , \y -> (2,) <$> [y .. y + 3]
   , \y -> [(x, y') | x <- [2, 3], y' <- [y, y + 1]]
   ]
+
+data Sq = BlockSq | RockSq | Empty
+instance Show Sq where
+  show BlockSq = "@"
+  show RockSq = "#"
+  show Empty = "."
+
+viz :: Block -> Rock -> Matrix Sq
+viz (Block block) (Rock rock) =
+  Mx.matrix height 7 $ swap >>> (subtract 1 *** (height -)) >>> \c ->
+    if Set.member c block then BlockSq
+    else if Set.member c rock then RockSq
+    else Empty
+  where
+    height = 1 + Set.findMax (Set.map snd $ Set.union rock block)

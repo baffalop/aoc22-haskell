@@ -2,7 +2,7 @@
 
 module Day17 (parse, solve1, solve2, viz) where
 
-import Prelude hiding (drop, ceiling)
+import Prelude hiding (drop, ceiling, floor)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -16,7 +16,8 @@ import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
 import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~))
--- import Debug.Trace (traceShowM)
+import Data.Functor ((<&>))
+import Debug.Trace (traceShowM)
 
 data Gust = L | R deriving (Show)
 
@@ -42,7 +43,7 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 gusts' = (+ 1) $ ceiling $ rock $ State.execState (replicateM_ 2022 releaseBlock) Cave
+solve1 gusts' = (+ 1) $ ceiling $ rock $ State.execState (replicateM_ 20 releaseBlock) Cave
     { rock = Rock Set.empty
     , mkBlocks = blocks
     , gusts = cycle gusts'
@@ -56,6 +57,8 @@ releaseBlock = do
   rock <- State.gets rock
   mkBlock <- consume _blocks
   dropBlock $ mkBlock $ ceiling rock + 4
+  State.modify $ _rock %~ crop
+  traceShowM $ viz (Block mempty) rock
 
 dropBlock :: Block -> State Cave ()
 dropBlock = blow >=> \block -> do
@@ -85,6 +88,13 @@ clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
 
 ceiling :: Rock -> Int
 ceiling (Rock r) = fromMaybe (-1) $ Set.lookupMax $ Set.map snd r
+
+floor :: Rock -> Int
+floor (Rock r) = minimum $ [0..6] <&> fromMaybe 0
+  . Set.lookupMax . Set.map snd . \x -> Set.filter ((== x) . fst) r
+
+crop :: Rock -> Rock
+crop rock@(Rock r) = Rock $ Set.filter ((>= floor rock) . snd) r
 
 move :: (Coord -> Coord) -> Block -> Block
 move f (Block block) = Block $ Set.map f block
@@ -126,10 +136,12 @@ instance Show Sq where
   show Empty = "."
 
 viz :: Block -> Rock -> Matrix Sq
-viz (Block block) (Rock rock) =
-  Mx.matrix height 7 $ swap >>> (subtract 1 *** (height -)) >>> \c ->
+viz b@(Block block) r@(Rock rock) =
+  Mx.matrix height 7 $ swap >>> (subtract 1 *** (ceil -)) >>> \c ->
     if Set.member c block then BlockSq
     else if Set.member c rock then RockSq
     else Empty
   where
-    height = 1 + Set.findMax (Set.map snd $ Set.union rock block)
+    height = max 1 $ ceil - floor glom
+    ceil = ceiling glom + 1
+    glom = calcify b r

@@ -16,6 +16,7 @@ import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
 import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~))
+-- import Debug.Trace (traceShowM)
 
 data Gust = L | R deriving (Show)
 
@@ -41,7 +42,7 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 gusts' = (+ 2) $ ceiling $ rock $ State.execState (replicateM_ 2022 releaseBlock) Cave
+solve1 gusts' = (+ 1) $ ceiling $ rock $ State.execState (replicateM_ 2022 releaseBlock) Cave
     { rock = Rock Set.empty
     , mkBlocks = blocks
     , gusts = cycle gusts'
@@ -54,12 +55,13 @@ releaseBlock :: State Cave ()
 releaseBlock = do
   rock <- State.gets rock
   mkBlock <- consume _blocks
-  dropBlock $ mkBlock $ ceiling rock + 3
+  dropBlock $ mkBlock $ ceiling rock + 4
 
 dropBlock :: Block -> State Cave ()
 dropBlock = blow >=> \block -> do
   let dropped = lower block
   rock <- State.gets rock
+  -- traceShowM $ viz block rock
   if clashes dropped rock || hitsFloor dropped
     then State.modify $ _rock %~ calcify block
     else dropBlock dropped

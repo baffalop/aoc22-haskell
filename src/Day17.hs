@@ -1,15 +1,21 @@
+{-# LANGUAGE TemplateHaskell, RankNTypes #-}
+
 module Day17 (parse, solve1, solve2, viz) where
 
 import Prelude hiding (drop, ceiling)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Control.Monad.State (State)
+import qualified Control.Monad.State as State
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
 import Data.Bifunctor (first, second)
 import Data.Maybe (fromMaybe)
 import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
+import Control.Monad (replicateM_, (>=>))
+import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~))
 
 data Gust = L | R deriving (Show)
 
@@ -17,6 +23,14 @@ type Coord = (Int, Int)
 
 newtype Block = Block (Set Coord) deriving (Show)
 newtype Rock = Rock (Set Coord) deriving (Show)
+
+data Cave = Cave
+  { rock :: Rock
+  , mkBlocks :: [Int -> Block]
+  , gusts :: [Gust]
+  }
+
+makeLensesFor [("rock", "_rock"), ("mkBlocks", "_blocks"), ("gusts", "_gusts")] ''Cave
 
 parse :: Text -> Either String [Gust]
 parse = traverse gust . head . lines . unpack
@@ -27,46 +41,42 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 gusts' = (+ 1) $ ceiling $ iterateBlocks 2022 blocks (cycle gusts') (Rock Set.empty)
-  where
-    iterateBlocks :: Int -> [Int -> Block] -> [Gust] -> Rock -> Rock
-    iterateBlocks 0 _ _ rock = rock
-    iterateBlocks _ [] _ _ = error "empty blocks - shouldn't they be infinite?"
-    iterateBlocks n (mkBlock:mkBlocks) gusts fallen =
-      let (newRock, nextGusts) = dropBlock fallen gusts $ mkBlock $ ceiling fallen + 3
-      in iterateBlocks (n - 1) mkBlocks nextGusts newRock
+solve1 gusts' = (+ 2) $ ceiling $ rock $ State.execState (replicateM_ 2022 releaseBlock) Cave
+    { rock = Rock Set.empty
+    , mkBlocks = blocks
+    , gusts = cycle gusts'
+    }
 
 solve2 :: [Gust] -> Int
 solve2 = undefined
 
-dropBlock :: Rock -> [Gust] -> Block -> (Rock, [Gust])
-dropBlock rock = drop
-  where
-    drop :: [Gust] -> Block -> (Rock, [Gust])
-    drop [] _ = error "empty gusts - shouldn't they be infinite?"
-    drop (gust:gusts) block = case step rock gust block of
-      Left rock' -> (rock', gusts)
-      Right dropped -> drop gusts dropped
+releaseBlock :: State Cave ()
+releaseBlock = do
+  rock <- State.gets rock
+  mkBlock <- consume _blocks
+  dropBlock $ mkBlock $ ceiling rock + 3
 
-step :: Rock -> Gust -> Block -> Either Rock Block
-step rock gust = fall . blow
-  where
-    blow :: Block -> Block
-    blow block =
-      let
-        (buffet, hitsSide) = case gust of
-          L -> (subtract 1, hitsLeft)
-          R -> ((+ 1), hitsRight)
+dropBlock :: Block -> State Cave ()
+dropBlock = blow >=> \block -> do
+  let dropped = lower block
+  rock <- State.gets rock
+  if clashes dropped rock || hitsFloor dropped
+    then State.modify $ _rock %~ calcify block
+    else dropBlock dropped
 
-        blown = move (first buffet) block
-      in
-      if clashes blown rock || hitsSide blown then block else blown
+blow :: Block -> State Cave Block
+blow block = do
+  rock <- State.gets rock
+  gust <- consume _gusts
+  let
+    (buffet, hitsSide) = case gust of
+      L -> (subtract 1, hitsLeft)
+      R -> ((+ 1), hitsRight)
 
-    fall :: Block -> Either Rock Block
-    fall block = let dropped = lower block in
-      if clashes dropped rock || hitsFloor dropped
-      then Left $ calcify block rock
-      else Right dropped
+    blown = move (first buffet) block
+  if clashes blown rock || hitsSide blown
+    then return block
+    else return blown
 
 clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
@@ -91,6 +101,12 @@ hitsLeft (Block block) = Set.findMin (Set.map fst block) < 0
 
 hitsRight :: Block -> Bool
 hitsRight (Block block) = Set.findMax (Set.map fst block) > 6
+
+consume :: Lens' s [a] -> State s a
+consume l = do
+  x <- State.gets $ head . (^. l)
+  State.modify $ l %~ tail
+  return x
 
 blocks :: [Int -> Block]
 blocks = cycle $ fmap (Block . Set.fromList) <$>

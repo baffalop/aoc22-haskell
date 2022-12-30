@@ -11,13 +11,12 @@ import qualified Control.Monad.State as State
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
 import Data.Bifunctor (first, second)
-import Data.Maybe (fromMaybe)
 import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
-import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~))
+import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~), (.~), (+~))
 import Data.Functor ((<&>))
--- import Debug.Trace (traceShowM)
+import Debug.Trace (traceShowM)
 
 data Gust = L | R deriving (Show)
 
@@ -28,11 +27,12 @@ newtype Rock = Rock (Set Coord) deriving (Show, Eq)
 
 data Cave = Cave
   { rock :: Rock
+  , ground :: Int
   , mkBlocks :: [Int -> Block]
   , gusts :: [Gust]
   }
 
-makeLensesFor [("rock", "_rock"), ("mkBlocks", "_blocks"), ("gusts", "_gusts")] ''Cave
+makeLensesFor [("rock", "_rock"), ("ground", "_ground"), ("mkBlocks", "_blocks"), ("gusts", "_gusts")] ''Cave
 
 parse :: Text -> Either String [Gust]
 parse = traverse gust . head . lines . unpack
@@ -43,7 +43,7 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 = sky . rock . State.execState (replicateM_ 20 releaseBlock) . initCave
+solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> [Int]
 solve2 = State.evalState findLoopss . initCave
@@ -52,7 +52,7 @@ solve2 = State.evalState findLoopss . initCave
     findLoopss = do
       n <- findLoop 1 Set.empty
       r <- State.gets rock
-      findLoops r 1 5
+      findLoops r 1 10
 
     findLoops :: Rock -> Int -> Int -> State Cave [Int]
     findLoops _ _ 0 = return []
@@ -74,8 +74,9 @@ releaseBlock = do
   fallen <- State.gets rock
   mkBlock <- consume _blocks
   dropBlock $ mkBlock $ sky fallen + 3
-  State.modify $ _rock %~ crop
-  -- traceShowM $ viz (Block mempty) fallen
+  cropRock
+  -- traceShowRock
+  -- traceShowM =<< State.gets ground
   State.gets rock
 
 dropBlock :: Block -> State Cave ()
@@ -83,7 +84,7 @@ dropBlock = blow >=> \block -> do
   let dropped = lower block
   rock <- State.gets rock
   -- traceShowM $ viz block rock
-  if clashes dropped rock || hitsFloor dropped
+  if clashes dropped rock || hitsGround dropped
     then State.modify $ _rock %~ calcify block
     else dropBlock dropped
 
@@ -101,18 +102,28 @@ blow block = do
     then return block
     else return blown
 
+cropRock :: State Cave ()
+cropRock = do
+  rock@(Rock r) <- State.gets rock
+  let ground = groundOf rock
+  let cropped = Rock $ Set.map (second $ subtract ground) $ Set.filter ((>= ground) . snd) r
+  State.modify $ (_rock .~ cropped) . (_ground +~ ground)
+
+traceShowRock :: State Cave ()
+traceShowRock = traceShowM . viz (Block Set.empty) =<< State.gets rock
+
 clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
+
+totalHeight :: Cave -> Int
+totalHeight Cave{ rock, ground } = ground + sky rock
 
 sky :: Rock -> Int
 sky (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
 
-ground :: Rock -> Int
-ground (Rock r) = minimum $ [0..6] <&> fromMaybe 0
+groundOf :: Rock -> Int
+groundOf (Rock r) = minimum $ [0..6] <&> maybe 0 (+ 1)
   . Set.lookupMax . Set.map snd . \x -> Set.filter ((== x) . fst) r
-
-crop :: Rock -> Rock
-crop rock@(Rock r) = Rock $ Set.filter ((>= ground rock) . snd) r
 
 move :: (Coord -> Coord) -> Block -> Block
 move f (Block block) = Block $ Set.map f block
@@ -123,8 +134,8 @@ calcify (Block block) (Rock rock) = Rock $ Set.union rock block
 lower :: Block -> Block
 lower = move $ second $ subtract 1
 
-hitsFloor :: Block -> Bool
-hitsFloor (Block block) = Set.findMin (Set.map snd block) < 0
+hitsGround :: Block -> Bool
+hitsGround (Block block) = Set.findMin (Set.map snd block) < 0
 
 hitsLeft :: Block -> Bool
 hitsLeft (Block block) = Set.findMin (Set.map fst block) < 0
@@ -150,6 +161,7 @@ blocks = cycle $ fmap (Block . Set.fromList) <$>
 initCave :: [Gust] -> Cave
 initCave gusts' = Cave
   { rock = Rock Set.empty
+  , ground = 0
   , mkBlocks = blocks
   , gusts = cycle gusts'
   }
@@ -162,11 +174,9 @@ instance Show Sq where
 
 viz :: Block -> Rock -> Matrix Sq
 viz b@(Block block) r@(Rock rock) =
-  Mx.matrix height 7 $ swap >>> (subtract 1 *** (ceil -)) >>> \c ->
+  Mx.matrix height 7 $ swap >>> (subtract 1 *** (height -)) >>> \c ->
     if Set.member c block then BlockSq
     else if Set.member c rock then RockSq
     else Empty
   where
-    height = max 1 $ ceil - ground glom
-    ceil = sky glom
-    glom = calcify b r
+    height = max 1 $ sky $ calcify b r

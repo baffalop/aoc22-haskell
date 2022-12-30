@@ -17,14 +17,14 @@ import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
 import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~))
 import Data.Functor ((<&>))
-import Debug.Trace (traceShowM)
+-- import Debug.Trace (traceShowM)
 
 data Gust = L | R deriving (Show)
 
 type Coord = (Int, Int)
 
-newtype Block = Block (Set Coord) deriving (Show)
-newtype Rock = Rock (Set Coord) deriving (Show)
+newtype Block = Block (Set Coord) deriving (Show, Eq)
+newtype Rock = Rock (Set Coord) deriving (Show, Eq)
 
 data Cave = Cave
   { rock :: Rock
@@ -43,22 +43,40 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 gusts' = (+ 1) $ ceiling $ rock $ State.execState (replicateM_ 20 releaseBlock) Cave
-    { rock = Rock Set.empty
-    , mkBlocks = blocks
-    , gusts = cycle gusts'
-    }
+solve1 = ceiling . rock . State.execState (replicateM_ 20 releaseBlock) . initCave
 
-solve2 :: [Gust] -> Int
-solve2 = undefined
+solve2 :: [Gust] -> [Int]
+solve2 = State.evalState findLoopss . initCave
+  where
+    findLoopss :: State Cave [Int]
+    findLoopss = do
+      n <- findLoop 1 Set.empty
+      r <- State.gets rock
+      findLoops r 1 5
 
-releaseBlock :: State Cave ()
+    findLoops :: Rock -> Int -> Int -> State Cave [Int]
+    findLoops _ _ 0 = return []
+    findLoops r n m = do
+      rock <- releaseBlock
+      if r == rock
+        then (n:) <$> findLoops r 1 (m - 1)
+        else findLoops r (n + 1) m
+
+    findLoop :: Int -> Set (Set Coord) -> State Cave Int
+    findLoop n prev = do
+      Rock r <- releaseBlock
+      if Set.member r prev
+        then return n
+        else findLoop (n + 1) $ Set.insert r prev
+
+releaseBlock :: State Cave Rock
 releaseBlock = do
-  rock <- State.gets rock
+  fallen <- State.gets rock
   mkBlock <- consume _blocks
-  dropBlock $ mkBlock $ ceiling rock + 4
+  dropBlock $ mkBlock $ ceiling fallen + 3
   State.modify $ _rock %~ crop
-  traceShowM $ viz (Block mempty) rock
+  -- traceShowM $ viz (Block mempty) fallen
+  State.gets rock
 
 dropBlock :: Block -> State Cave ()
 dropBlock = blow >=> \block -> do
@@ -87,7 +105,7 @@ clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
 
 ceiling :: Rock -> Int
-ceiling (Rock r) = fromMaybe (-1) $ Set.lookupMax $ Set.map snd r
+ceiling (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
 
 floor :: Rock -> Int
 floor (Rock r) = minimum $ [0..6] <&> fromMaybe 0
@@ -129,6 +147,13 @@ blocks = cycle $ fmap (Block . Set.fromList) <$>
   , \y -> [(x, y') | x <- [2, 3], y' <- [y, y + 1]]
   ]
 
+initCave :: [Gust] -> Cave
+initCave gusts' = Cave
+  { rock = Rock Set.empty
+  , mkBlocks = blocks
+  , gusts = cycle gusts'
+  }
+
 data Sq = BlockSq | RockSq | Empty
 instance Show Sq where
   show BlockSq = "@"
@@ -143,5 +168,5 @@ viz b@(Block block) r@(Rock rock) =
     else Empty
   where
     height = max 1 $ ceil - floor glom
-    ceil = ceiling glom + 1
+    ceil = ceiling glom
     glom = calcify b r

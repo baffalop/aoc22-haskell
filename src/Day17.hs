@@ -2,7 +2,7 @@
 
 module Day17 (parse, solve1, solve2, viz) where
 
-import Prelude hiding (drop, ceiling, floor)
+import Prelude hiding (drop)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -43,7 +43,7 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 = ceiling . rock . State.execState (replicateM_ 20 releaseBlock) . initCave
+solve1 = sky . rock . State.execState (replicateM_ 20 releaseBlock) . initCave
 
 solve2 :: [Gust] -> [Int]
 solve2 = State.evalState findLoopss . initCave
@@ -73,7 +73,7 @@ releaseBlock :: State Cave Rock
 releaseBlock = do
   fallen <- State.gets rock
   mkBlock <- consume _blocks
-  dropBlock $ mkBlock $ ceiling fallen + 3
+  dropBlock $ mkBlock $ sky fallen + 3
   State.modify $ _rock %~ crop
   -- traceShowM $ viz (Block mempty) fallen
   State.gets rock
@@ -104,15 +104,15 @@ blow block = do
 clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
 
-ceiling :: Rock -> Int
-ceiling (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
+sky :: Rock -> Int
+sky (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
 
-floor :: Rock -> Int
-floor (Rock r) = minimum $ [0..6] <&> fromMaybe 0
+ground :: Rock -> Int
+ground (Rock r) = minimum $ [0..6] <&> fromMaybe 0
   . Set.lookupMax . Set.map snd . \x -> Set.filter ((== x) . fst) r
 
 crop :: Rock -> Rock
-crop rock@(Rock r) = Rock $ Set.filter ((>= floor rock) . snd) r
+crop rock@(Rock r) = Rock $ Set.filter ((>= ground rock) . snd) r
 
 move :: (Coord -> Coord) -> Block -> Block
 move f (Block block) = Block $ Set.map f block
@@ -167,6 +167,6 @@ viz b@(Block block) r@(Rock rock) =
     else if Set.member c rock then RockSq
     else Empty
   where
-    height = max 1 $ ceil - floor glom
-    ceil = ceiling glom
+    height = max 1 $ ceil - ground glom
+    ceil = sky glom
     glom = calcify b r

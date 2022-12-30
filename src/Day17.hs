@@ -6,6 +6,8 @@ import Prelude hiding (drop)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Control.Monad.State (State)
 import qualified Control.Monad.State as State
 import Data.Matrix (Matrix)
@@ -18,12 +20,12 @@ import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~), (.~), (+~))
 import Data.Functor ((<&>))
 import Debug.Trace (traceShowM)
 
-data Gust = L | R deriving (Show)
+data Gust = L | R deriving (Show, Eq, Ord)
 
 type Coord = (Int, Int)
 
-newtype Block = Block (Set Coord) deriving (Show, Eq)
-newtype Rock = Rock (Set Coord) deriving (Show, Eq)
+newtype Block = Block (Set Coord) deriving (Show, Eq, Ord)
+newtype Rock = Rock (Set Coord) deriving (Show, Eq, Ord)
 
 data Cave = Cave
   { rock :: Rock
@@ -45,29 +47,28 @@ parse = traverse gust . head . lines . unpack
 solve1 :: [Gust] -> Int
 solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
-solve2 :: [Gust] -> [Int]
-solve2 = State.evalState findLoopss . initCave
+solve2 :: [Gust] -> Integer
+solve2 gusts' = State.evalState (findLoop 1 Map.empty) $ initCave gusts'
   where
-    findLoopss :: State Cave [Int]
-    findLoopss = do
-      n <- findLoop 1 Set.empty
-      r <- State.gets rock
-      findLoops r 1 10
-
-    findLoops :: Rock -> Int -> Int -> State Cave [Int]
-    findLoops _ _ 0 = return []
-    findLoops r n m = do
-      rock <- releaseBlock
-      if r == rock
-        then (n:) <$> findLoops r 1 (m - 1)
-        else findLoops r (n + 1) m
-
-    findLoop :: Int -> Set (Set Coord) -> State Cave Int
+    findLoop :: Integer -> Map (Rock, Block, [Gust]) (Integer, Integer) -> State Cave Integer
     findLoop n prev = do
-      Rock r <- releaseBlock
-      if Set.member r prev
-        then return n
-        else findLoop (n + 1) $ Set.insert r prev
+      curRock <- releaseBlock
+      mkBlock <- State.gets $ head . mkBlocks
+      gusts <- State.gets $ take gustLength . gusts
+      height <- State.gets $ toInteger . totalHeight
+      let state = (curRock, mkBlock 0, gusts)
+      case Map.lookup state prev of
+        Nothing -> findLoop (n + 1) $ Map.insert state (n, height) prev
+        Just (initBlocks, initHeight) -> do
+          let loop = n - initBlocks
+          let loopHeight = height - initHeight
+          let (loops, remainder) = (1000000000000 - initBlocks) `divMod` loop
+          replicateM_ (fromInteger remainder) releaseBlock
+          remainingHeight <- State.gets $ toInteger . sky . rock
+          return $ initHeight + (loops * loopHeight) + remainingHeight
+
+    gustLength :: Int
+    gustLength = length gusts'
 
 releaseBlock :: State Cave Rock
 releaseBlock = do

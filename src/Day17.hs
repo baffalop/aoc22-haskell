@@ -48,9 +48,19 @@ solve1 :: [Gust] -> Int
 solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> Integer
-solve2 gusts' = State.evalState (findLoop 1 Map.empty) $ initCave gusts'
+solve2 gusts' = State.evalState solve $ initCave gusts'
   where
-    findLoop :: Integer -> Map (Rock, Block, [Gust]) (Integer, Integer) -> State Cave Integer
+    solve :: State Cave Integer
+    solve = do
+      (spentBlocks, loop, loopHeight) <- findLoop 1 Map.empty
+      let (loops, remainder) = (1000000000000 - spentBlocks) `divMod` loop
+      replicateM_ (fromInteger remainder) releaseBlock
+      remHeight <- State.gets $ toInteger . sky . rock
+      return $ (loops * loopHeight) + remHeight
+
+    findLoop :: Integer
+      -> Map (Rock, Block, [Gust]) (Integer, Integer)
+      -> State Cave (Integer, Integer, Integer)
     findLoop n prev = do
       curRock <- releaseBlock
       mkBlock <- State.gets $ head . mkBlocks
@@ -58,14 +68,10 @@ solve2 gusts' = State.evalState (findLoop 1 Map.empty) $ initCave gusts'
       height <- State.gets $ toInteger . totalHeight
       let state = (curRock, mkBlock 0, gusts)
       case Map.lookup state prev of
-        Nothing -> findLoop (n + 1) $ Map.insert state (n, height) prev
-        Just (initBlocks, initHeight) -> do
-          let loop = n - initBlocks
-          let loopHeight = height - initHeight
-          let (loops, remainder) = (1000000000000 - initBlocks) `divMod` loop
-          replicateM_ (fromInteger remainder) releaseBlock
-          remainingHeight <- State.gets $ toInteger . sky . rock
-          return $ initHeight + (loops * loopHeight) + remainingHeight
+        Nothing ->
+          findLoop (n + 1) $ Map.insert state (n, height) prev
+        Just (initBlocks, initHeight) ->
+          return (n, n - initBlocks, height - initHeight)
 
     gustLength :: Int
     gustLength = length gusts'

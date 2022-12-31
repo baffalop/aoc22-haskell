@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell, RankNTypes #-}
 
-module Day17 (parse, solve1, solve2, viz) where
+module Day17 (parse, solve1, solve2, traceShowRock) where
 
 import Data.Text (Text, unpack)
 import Data.Set (Set)
@@ -23,7 +23,7 @@ data Gust = L | R deriving (Show, Eq, Ord)
 type Coord = (Int, Int)
 
 newtype Block = Block (Set Coord) deriving (Show, Eq, Ord)
-newtype Rock = Rock { rocks :: Set Coord } deriving (Show, Eq, Ord)
+newtype Rock = Rock { rocks :: Set Coord } deriving (Eq, Ord)
 
 data Cave = Cave
   { rock :: Rock
@@ -47,7 +47,7 @@ solve1 :: [Gust] -> Int
 solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> Integer
-solve2 gusts' = undefined -- State.evalState solve $ initCave gusts'
+solve2 gusts' = State.evalState solve $ initCave gusts'
   where
     solve :: State Cave Integer
     solve = do
@@ -138,7 +138,7 @@ reachable rock@(Rock r) = Rock $ fst $ reachFrom (Set.singleton (0, height)) (0,
     height = heightOf rock
 
 traceShowRock :: State Cave ()
-traceShowRock = traceShowM . viz (Block Set.empty) =<< State.gets rock
+traceShowRock = traceShowM =<< State.gets rock
 
 clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
@@ -198,6 +198,8 @@ instance Show Sq where
   show BlockSq = "@"
   show RockSq = "#"
   show Empty = "."
+
+instance Show Rock where show = show . viz (Block Set.empty)
 
 viz :: Block -> Rock -> Matrix Sq
 viz b@(Block block) r@(Rock rock) =

@@ -7,7 +7,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Control.Monad.State (State)
+import Control.Monad.State (State, execState, evalState)
 import qualified Control.Monad.State as State
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
@@ -45,10 +45,10 @@ parse = traverse gust . head . lines . unpack
     gust c = Left $ "Not a gust: " <> [c]
 
 solve1 :: [Gust] -> Int
-solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
+solve1 = totalHeight . execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> Integer
-solve2 gusts' = State.evalState (solveFor 1000000000000) $ initCave gusts'
+solve2 gusts' = evalState (solveFor 1000000000000) $ initCave gusts'
   where
     solveFor :: Integer -> State Cave Integer
     solveFor target = do

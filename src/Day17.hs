@@ -16,7 +16,6 @@ import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
 import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (+=), (^.))
-import Data.Functor ((<&>))
 import Debug.Trace (traceShowM)
 
 data Gust = L | R deriving (Show, Eq, Ord)
@@ -48,7 +47,7 @@ solve1 :: [Gust] -> Int
 solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> Integer
-solve2 gusts' = State.evalState solve $ initCave gusts'
+solve2 gusts' = undefined -- State.evalState solve $ initCave gusts'
   where
     solve :: State Cave Integer
     solve = do
@@ -111,9 +110,32 @@ blow block = do
 
 cropRock :: State Cave ()
 cropRock = do
+  _rock %= reachable
   ground <- State.gets $ groundOf . rock
-  _rock . _rocks %= Set.map (second $ subtract ground) . Set.filter ((>= ground) . snd)
+  _rock . _rocks %= Set.map (second $ subtract ground)
   _ground += ground
+
+reachable :: Rock -> Rock
+reachable rock@(Rock r) = Rock $ fst $ reachFrom (Set.singleton (0, height)) (0, height)
+  where
+    reachFrom :: Set Coord -> Coord -> (Set Coord, Set Coord)
+    reachFrom visited c =
+      if Set.member c r
+        then (Set.singleton c, Set.insert c visited)
+        else
+          foldr
+            (\nb (reached, v) -> first (reached <>) $ reachFrom (Set.insert nb v) nb)
+            (Set.empty, visited)
+            $ neighbours visited c
+
+    neighbours :: Set Coord -> Coord -> [Coord]
+    neighbours visited (x, y) = filter (valid visited)
+      $ [(x', y') | x' <- [x - 1 .. x + 1], y' <- [y - 1 .. y + 1]]
+
+    valid :: Set Coord -> Coord -> Bool
+    valid visited c@(x, y) = x >= 0 && x <= 6 && y >= 0 && y <= height && not (Set.member c visited)
+
+    height = heightOf rock
 
 traceShowRock :: State Cave ()
 traceShowRock = traceShowM . viz (Block Set.empty) =<< State.gets rock
@@ -128,8 +150,7 @@ heightOf :: Rock -> Int
 heightOf (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
 
 groundOf :: Rock -> Int
-groundOf (Rock r) = minimum $ [0..6] <&> maybe 0 (+ 1)
-  . Set.lookupMax . Set.map snd . \x -> Set.filter ((== x) . fst) r
+groundOf (Rock r) = Set.findMin (Set.map snd r)
 
 move :: (Coord -> Coord) -> Block -> Block
 move f (Block block) = Block $ Set.map f block

@@ -87,7 +87,7 @@ releaseBlock = do
 
 dropBlock :: Block -> State Cave ()
 dropBlock = blow >=> \block -> do
-  let dropped = lower block
+  let dropped = move (second $ subtract 1) block
   rock <- State.gets rock
   -- traceShowM $ viz block rock
   if clashes dropped rock || hitsGround dropped
@@ -157,9 +157,6 @@ move f (Block block) = Block $ Set.map f block
 
 calcify :: Block -> Rock -> Rock
 calcify (Block block) (Rock rock) = Rock $ Set.union rock block
-
-lower :: Block -> Block
-lower = move $ second $ subtract 1
 
 hitsGround :: Block -> Bool
 hitsGround (Block block) = Set.findMin (Set.map snd block) < 0

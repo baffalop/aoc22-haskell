@@ -17,6 +17,7 @@ import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
 import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (+=), (^.))
 import Debug.Trace (traceShowM)
+import Utils (within)
 
 data Gust = L | R deriving (Show, Eq, Ord)
 
@@ -133,7 +134,8 @@ reachable rock@(Rock r) = Rock $ fst $ reachFrom (Set.singleton (0, height)) (0,
       $ [(x', y') | x' <- [x - 1 .. x + 1], y' <- [y - 1 .. y + 1]]
 
     valid :: Set Coord -> Coord -> Bool
-    valid visited c@(x, y) = x >= 0 && x <= 6 && y >= 0 && y <= height && not (Set.member c visited)
+    valid visited c@(x, y) =
+      x `within` (0, 6) && y `within` (0, height) && not (Set.member c visited)
 
     height = heightOf rock
 

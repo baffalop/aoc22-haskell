@@ -117,24 +117,24 @@ cropRock = do
   _ground += ground
 
 reachable :: Rock -> Rock
-reachable rock@(Rock r) = Rock $ fst $ reachFrom (Set.singleton (0, height)) (0, height)
+reachable rock@Rock{ rocks } = Rock $ fst $ reachableFrom (0, height) Set.empty
   where
-    reachFrom :: Set Coord -> Coord -> (Set Coord, Set Coord)
-    reachFrom visited c =
-      if Set.member c r
-        then (Set.singleton c, Set.insert c visited)
-        else
-          foldr
-            (\nb (reached, v) -> first (reached <>) $ reachFrom (Set.insert nb v) nb)
-            (Set.empty, visited)
-            $ neighbours visited c
+    reachableFrom :: Coord -> Set Coord -> (Set Coord, Set Coord)
+    reachableFrom c (Set.insert c -> visited) =
+      if Set.member c rocks
+      then (Set.singleton c, Set.insert c visited)
+      else
+        foldr
+          (\nb (reached, visited') -> first (reached <>) $ reachableFrom nb visited')
+          (Set.empty, visited)
+          $ neighbours visited c
 
     neighbours :: Set Coord -> Coord -> [Coord]
-    neighbours visited (x, y) = filter (valid visited)
-      $ [(x', y') | x' <- [x - 1 .. x + 1], y' <- [y - 1 .. y + 1]]
+    neighbours visited (x, y) = filter (validNeighbour visited)
+      [(x', y') | x' <- [x - 1 .. x + 1], y' <- [y - 1 .. y + 1]]
 
-    valid :: Set Coord -> Coord -> Bool
-    valid visited c@(x, y) =
+    validNeighbour :: Set Coord -> Coord -> Bool
+    validNeighbour visited c@(x, y) =
       x `within` (0, 6) && y `within` (0, height) && not (Set.member c visited)
 
     height = heightOf rock

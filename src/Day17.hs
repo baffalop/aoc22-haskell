@@ -2,7 +2,6 @@
 
 module Day17 (parse, solve1, solve2, viz) where
 
-import Prelude hiding (drop)
 import Data.Text (Text, unpack)
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -56,7 +55,7 @@ solve2 gusts' = State.evalState solve $ initCave gusts'
       (spentBlocks, loop, loopHeight) <- findLoop 1 Map.empty
       let (loops, remainder) = (1000000000000 - spentBlocks) `divMod` loop
       replicateM_ (fromInteger remainder) releaseBlock
-      remHeight <- State.gets $ toInteger . sky . rock
+      remHeight <- State.gets $ toInteger . heightOf . rock
       return $ (loops * loopHeight) + remHeight
 
     findLoop :: Integer
@@ -81,7 +80,7 @@ releaseBlock :: State Cave Rock
 releaseBlock = do
   fallen <- State.gets rock
   mkBlock <- consume _blocks
-  dropBlock $ mkBlock $ sky fallen + 3
+  dropBlock $ mkBlock $ heightOf fallen + 3
   cropRock
   -- traceShowRock
   -- traceShowM =<< State.gets ground
@@ -123,10 +122,10 @@ clashes :: Block -> Rock -> Bool
 clashes (Block block) (Rock rock) = not $ Set.disjoint rock block
 
 totalHeight :: Cave -> Int
-totalHeight Cave{ rock, ground } = ground + sky rock
+totalHeight Cave{ rock, ground } = ground + heightOf rock
 
-sky :: Rock -> Int
-sky (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
+heightOf :: Rock -> Int
+heightOf (Rock r) = maybe 0 (+ 1) $ Set.lookupMax $ Set.map snd r
 
 groundOf :: Rock -> Int
 groundOf (Rock r) = minimum $ [0..6] <&> maybe 0 (+ 1)
@@ -186,4 +185,4 @@ viz b@(Block block) r@(Rock rock) =
     else if Set.member c rock then RockSq
     else Empty
   where
-    height = max 1 $ sky $ calcify b r
+    height = max 1 $ heightOf $ calcify b r

@@ -16,7 +16,7 @@ import Data.Bifunctor (first, second)
 import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
-import Lens.Micro.Platform (Lens', makeLensesFor, (^.), (%~), (.~), (+~))
+import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (.=), (+=), (^.))
 import Data.Functor ((<&>))
 import Debug.Trace (traceShowM)
 
@@ -114,7 +114,8 @@ cropRock = do
   rock@(Rock r) <- State.gets rock
   let ground = groundOf rock
   let cropped = Rock $ Set.map (second $ subtract ground) $ Set.filter ((>= ground) . snd) r
-  State.modify $ (_rock .~ cropped) . (_ground +~ ground)
+  _rock .= cropped
+  _ground += ground
 
 traceShowRock :: State Cave ()
 traceShowRock = traceShowM . viz (Block Set.empty) =<< State.gets rock

@@ -47,12 +47,12 @@ solve1 :: [Gust] -> Int
 solve1 = totalHeight . State.execState (replicateM_ 2022 releaseBlock) . initCave
 
 solve2 :: [Gust] -> Integer
-solve2 gusts' = State.evalState solve $ initCave gusts'
+solve2 gusts' = State.evalState (solveFor 1000000000000) $ initCave gusts'
   where
-    solve :: State Cave Integer
-    solve = do
+    solveFor :: Integer -> State Cave Integer
+    solveFor target = do
       (spentBlocks, loop, loopHeight) <- findLoop 1 Map.empty
-      let (loops, remainder) = (1000000000000 - spentBlocks) `divMod` loop
+      let (loops, remainder) = (target - spentBlocks) `divMod` loop
       replicateM_ (fromInteger remainder) releaseBlock
       remHeight <- State.gets $ toInteger . heightOf . rock
       return $ (loops * loopHeight) + remHeight

@@ -16,7 +16,7 @@ import Data.Bifunctor (first, second)
 import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
-import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (.=), (+=), (^.))
+import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (+=), (^.))
 import Data.Functor ((<&>))
 import Debug.Trace (traceShowM)
 
@@ -25,7 +25,7 @@ data Gust = L | R deriving (Show, Eq, Ord)
 type Coord = (Int, Int)
 
 newtype Block = Block (Set Coord) deriving (Show, Eq, Ord)
-newtype Rock = Rock (Set Coord) deriving (Show, Eq, Ord)
+newtype Rock = Rock { rocks :: Set Coord } deriving (Show, Eq, Ord)
 
 data Cave = Cave
   { rock :: Rock
@@ -35,6 +35,7 @@ data Cave = Cave
   }
 
 makeLensesFor [("rock", "_rock"), ("ground", "_ground"), ("mkBlocks", "_blocks"), ("gusts", "_gusts")] ''Cave
+makeLensesFor [("rocks", "_rocks")] ''Rock
 
 parse :: Text -> Either String [Gust]
 parse = traverse gust . head . lines . unpack
@@ -92,7 +93,7 @@ dropBlock = blow >=> \block -> do
   rock <- State.gets rock
   -- traceShowM $ viz block rock
   if clashes dropped rock || hitsGround dropped
-    then State.modify $ _rock %~ calcify block
+    then _rock %= calcify block
     else dropBlock dropped
 
 blow :: Block -> State Cave Block
@@ -111,10 +112,8 @@ blow block = do
 
 cropRock :: State Cave ()
 cropRock = do
-  rock@(Rock r) <- State.gets rock
-  let ground = groundOf rock
-  let cropped = Rock $ Set.map (second $ subtract ground) $ Set.filter ((>= ground) . snd) r
-  _rock .= cropped
+  ground <- State.gets $ groundOf . rock
+  _rock . _rocks %= Set.map (second $ subtract ground) . Set.filter ((>= ground) . snd)
   _ground += ground
 
 traceShowRock :: State Cave ()
@@ -154,7 +153,7 @@ hitsRight (Block block) = Set.findMax (Set.map fst block) > 6
 consume :: Lens' s [a] -> State s a
 consume l = do
   x <- State.gets $ head . (^. l)
-  State.modify $ l %~ tail
+  l %= tail
   return x
 
 blocks :: [Int -> Block]

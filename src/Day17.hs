@@ -122,7 +122,7 @@ reachable rock@Rock{ rocks } = Rock $ fst $ reachableFrom (0, height) Set.empty
     reachableFrom :: Coord -> Set Coord -> (Set Coord, Set Coord)
     reachableFrom c (Set.insert c -> visited) =
       if Set.member c rocks
-      then (Set.singleton c, Set.insert c visited)
+      then (Set.singleton c, visited)
       else
         foldr
           (\nb (reached, visited') -> first (reached <>) $ reachableFrom nb visited')

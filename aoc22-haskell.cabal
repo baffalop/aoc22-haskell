@@ -36,6 +36,7 @@ executable aoc22-haskell
       Day15
       Day16
       Day17
+      Day18
       Day23
       Day25
       Parsing

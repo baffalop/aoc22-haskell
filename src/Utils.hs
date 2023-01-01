@@ -1,5 +1,6 @@
 module Utils
   ((<.>)
+  , count
   , nTimes
   , indexedFind
   , within
@@ -13,6 +14,9 @@ import Data.Foldable (find)
 infixl 4 <.>
 (<.>) :: Functor f => (b -> c) -> (a -> f b) -> a -> f c
 f <.> g = fmap f . g
+
+count :: (a -> Bool) -> [a] -> Int
+count f = length . filter f
 
 nTimes :: Int -> (a -> a) -> a -> a
 nTimes n f = foldr (.) id $ replicate n f

@@ -25,18 +25,21 @@ solve1 cubes = sum $ surface <$> Set.toList cubes
     surface = (6 -) . count (`Set.member` cubes) . neighbours
 
 solve2 :: Input -> Int
-solve2 cubes = fst $ reachableFrom (fst xBounds, fst yBounds, fst zBounds) Set.empty
+solve2 cubes = foldr ((+) . Set.size) 0
+  $ fst $ reachableFrom (fst xBounds, fst yBounds, fst zBounds) Set.empty
   where
-    reachableFrom :: Coord -> Set Coord -> (Int, Set Coord)
+    reachableFrom :: Coord -> Set Coord -> (Map Coord (Set Coord), Set Coord)
     reachableFrom c visited =
-      if Set.member c cubes
-      then (1, visited)
-      else
-        foldr
-          (\nb (reached, visited') -> first (+ reached) $ reachableFrom nb $ Set.insert c visited')
-          (0, visited)
-          $ filter (validNeighbour visited)
-          $ neighbours c
+      foldr
+        (\nb (reached, visited') ->
+          if Set.member nb cubes
+            then (Map.insertWith (<>) nb (Set.singleton c) reached, visited')
+            else first (Map.unionWith (<>) reached)
+              $ reachableFrom nb $ Set.insert c visited'
+        )
+        (Map.empty, Set.insert c visited)
+        $ filter (validNeighbour visited)
+        $ neighbours c
 
     validNeighbour :: Set Coord -> Coord -> Bool
     validNeighbour visited c@(x, y, z) =

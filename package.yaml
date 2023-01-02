@@ -16,6 +16,8 @@ dependencies:
   - attoparsec
   - composition-extra
   - containers
+  - criterion
+  - deepseq
   - data-interval
   - extra
   - matrix

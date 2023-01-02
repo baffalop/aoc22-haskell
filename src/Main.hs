@@ -15,6 +15,7 @@ import Text.Printf (printf)
 import Control.Applicative ((<|>))
 import Data.Maybe (mapMaybe)
 import Data.List ((\\))
+import Data.List.Split (splitOn)
 import qualified Data.Text.ANSI as ANSI
 import Control.DeepSeq (NFData)
 import qualified Criterion.Main as Criterion
@@ -172,7 +173,7 @@ cli =
     day = Opt.eitherReader readDay
 
     days :: Opt.ReadM [Day]
-    days = Opt.eitherReader $ traverse readDay . words
+    days = Opt.eitherReader $ traverse readDay . splitOn ","
 
     readDay :: String -> Either String Day
     readDay s = maybeToEither err $ mkDay =<< readMaybe s

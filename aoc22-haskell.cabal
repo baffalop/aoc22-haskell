@@ -69,6 +69,7 @@ executable aoc22-haskell
     , optparse-applicative
     , pqueue
     , safe
+    , split
     , text
     , text-ansi
     , vector

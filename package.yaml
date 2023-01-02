@@ -26,6 +26,7 @@ dependencies:
   - optparse-applicative
   - pqueue
   - safe
+  - split
   - text
   - text-ansi
   - vector

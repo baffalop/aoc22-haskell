@@ -63,25 +63,27 @@ main = do
     AllDays -> do
       putStrLn "Running all days...\n"
       forM_ (mapMaybe mkDay [1..25]) \day -> do
-        putStrLn $ "----- DAY " <> show day
+        putStrLn $ "----- DAY " <> show (dayInt day)
         runDay key (baseDayOpts day) `catch` \e ->
           let _ = e::SomeException in pure ()
         putStrLn ""
 
 runDay :: SessionKey -> DayOpts -> IO ()
-runDay key DayOpts{ day, showParsed, runExample } = do
-  input <- if runExample then readExampleInput day else fetchInput day key
+runDay key DayOpts{ day, showParsed, runExample } =
+  case solveFor day of
+    Nothing -> putStrLn $ "No solution for day " <> show (dayInt day) <> " yet"
+    Just solve -> do
+      input <- if runExample then readExampleInput day else fetchInput day key
 
-  case solve day input of
-    Left err ->
-      putStrLn $ "Parse error: " <> err
-    Right Answer{..} -> do
-      when showParsed do
-        putStrLn "Parsed input:" >> putStrLn parsed
-        putStrLn ""
-      putStrLn "Part 1:" >> putStrLn part1
-      putStrLn ""
-      putStrLn "Part 2:" >> putStrLn part2
+      case solve input of
+        Left e -> putStrLn $ "Parse error: " <> e
+        Right Answer{..} -> do
+          when showParsed do
+            putStrLn "Parsed input:" >> putStrLn parsed
+            putStrLn ""
+          putStrLn "Part 1:" >> putStrLn part1
+          putStrLn ""
+          putStrLn "Part 2:" >> putStrLn part2
 
 readExampleInput :: Day -> IO Text
 readExampleInput (dayInt -> day) =
@@ -90,29 +92,29 @@ readExampleInput (dayInt -> day) =
     fail $ "Have you created the file " <> file <> " ?"
   where file = "input/2022/ex-" <> printf "%02d" day <> ".txt"
 
-solve :: Day -> Solution
-solve day = case dayInt day of
-  1  -> simpleSolution Day01.parse Day01.solve1 Day01.solve2
-  2  -> eitherSolution Day02.parse Day02.solve1 Day02.solve2
-  3  -> simpleSolution Day03.parse Day03.solve1 Day03.solve2
-  4  -> eitherSolution Day04.parse Day04.solve1 Day04.solve2
-  5  -> eitherSolution Day05.parse Day05.solve1 Day05.solve2
-  6  -> simpleSolution Day06.parse Day06.solve1 Day06.solve2
-  7  -> eitherSolution Day07.parse Day07.solve1 Day07.solve2
-  8  -> simpleSolution Day08.parse Day08.solve1 Day08.solve2
-  9  -> eitherSolution Day09.parse Day09.solve1 Day09.solve2
-  10 -> eitherSolution Day10.parse Day10.solve1 Day10.solve2
-  11 -> eitherSolution Day11.parse Day11.solve1 Day11.solve2
-  12 -> eitherSolution Day12.parse Day12.solve1 Day12.solve2
-  13 -> eitherSolution Day13.parse Day13.solve1 Day13.solve2
-  14 -> eitherSolution Day14.parse Day14.solve1 Day14.solve2
-  15 -> eitherSolution Day15.parse Day15.solve1 Day15.solve2
-  16 -> eitherSolution Day16.parse Day16.solve1 Day16.solve2
-  17 -> eitherSolution Day17.parse Day17.solve1 Day17.solve2
-  18 -> eitherSolution Day18.parse Day18.solve1 Day18.solve2
-  23 -> simpleSolution Day23.parse Day23.solve1 Day23.solve2
-  25 -> eitherSolution Day25.parse Day25.solve1 Day25.solve2
-  d -> const $ Left $ "No solution for day " <> show d <> " yet"
+solveFor :: Day -> Maybe Solution
+solveFor day = case dayInt day of
+  1  -> Just $ simpleSolution Day01.parse Day01.solve1 Day01.solve2
+  2  -> Just $ eitherSolution Day02.parse Day02.solve1 Day02.solve2
+  3  -> Just $ simpleSolution Day03.parse Day03.solve1 Day03.solve2
+  4  -> Just $ eitherSolution Day04.parse Day04.solve1 Day04.solve2
+  5  -> Just $ eitherSolution Day05.parse Day05.solve1 Day05.solve2
+  6  -> Just $ simpleSolution Day06.parse Day06.solve1 Day06.solve2
+  7  -> Just $ eitherSolution Day07.parse Day07.solve1 Day07.solve2
+  8  -> Just $ simpleSolution Day08.parse Day08.solve1 Day08.solve2
+  9  -> Just $ eitherSolution Day09.parse Day09.solve1 Day09.solve2
+  10 -> Just $ eitherSolution Day10.parse Day10.solve1 Day10.solve2
+  11 -> Just $ eitherSolution Day11.parse Day11.solve1 Day11.solve2
+  12 -> Just $ eitherSolution Day12.parse Day12.solve1 Day12.solve2
+  13 -> Just $ eitherSolution Day13.parse Day13.solve1 Day13.solve2
+  14 -> Just $ eitherSolution Day14.parse Day14.solve1 Day14.solve2
+  15 -> Just $ eitherSolution Day15.parse Day15.solve1 Day15.solve2
+  16 -> Just $ eitherSolution Day16.parse Day16.solve1 Day16.solve2
+  17 -> Just $ eitherSolution Day17.parse Day17.solve1 Day17.solve2
+  18 -> Just $ eitherSolution Day18.parse Day18.solve1 Day18.solve2
+  23 -> Just $ simpleSolution Day23.parse Day23.solve1 Day23.solve2
+  25 -> Just $ eitherSolution Day25.parse Day25.solve1 Day25.solve2
+  _ -> Nothing
 
 simpleSolution :: (Show a, Show b, Show c) => (Text -> a) -> (a -> b) -> (a -> c) -> Solution
 simpleSolution parse = eitherSolution $ Right . parse

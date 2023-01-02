@@ -107,15 +107,9 @@ runDay key DayOpts{..} = case solutionFor day of
           Criterion.Report.benchmark $ Criterion.nf solve2 parsed
           putStrLn ""
         print $ solve2 parsed
+
   where
     dayStr = show $ dayInt day
-
-readExampleInput :: Day -> IO Text
-readExampleInput (dayInt -> day) =
-  TIO.readFile file `catch` \e ->
-    let _ = e :: IOException in
-    fail $ "Have you created the file " <> file <> " ?"
-  where file = "input/2022/ex-" <> printf "%02d" day <> ".txt"
 
 solutionFor :: Day -> Maybe Solution
 solutionFor day = case dayInt day of
@@ -140,9 +134,8 @@ solutionFor day = case dayInt day of
   23 -> Just $ simpleSn Day23.parse Day23.solve1 Day23.solve2
   25 -> Nothing -- Just $ Solution Day25.parse Day25.solve1 Day25.solve2
   _ -> Nothing
-
-simpleSn :: (Show p, Show a, Show b, NFData a, NFData b) => (Text -> p) -> (p -> a) -> (p -> b) -> Solution
-simpleSn parse = Solution $ Right . parse
+  where
+    simpleSn parse = Solution $ Right . parse
 
 cli :: Opt.ParserInfo RunOpts
 cli =
@@ -178,6 +171,13 @@ fetchInput day key = do
   case response of
     Left err -> fail $ "Error response from API: " <> show err
     Right input -> pure input
+
+readExampleInput :: Day -> IO Text
+readExampleInput (dayInt -> day) =
+  TIO.readFile file `catch` \e ->
+    let _ = e :: IOException in
+    fail $ "Have you created the file " <> file <> " ?"
+  where file = "input/2022/ex-" <> printf "%02d" day <> ".txt"
 
 baseDayOpts :: Day -> DayOpts
 baseDayOpts day = DayOpts day False False False

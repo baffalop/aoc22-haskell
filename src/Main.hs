@@ -14,6 +14,7 @@ import Control.Exception (catch, SomeException, IOException)
 import Text.Printf (printf)
 import Control.Applicative ((<|>))
 import Data.Maybe (mapMaybe)
+import Data.List ((\\))
 import qualified Data.Text.ANSI as ANSI
 import Control.DeepSeq (NFData)
 import qualified Criterion.Main as Criterion
@@ -50,7 +51,10 @@ data Solution = forall p a b . (Show p, Show a, Show b, NFData a, NFData b) =>
     }
 
 data RunOpts
-  = AllDays { benchmarkAll :: Bool }
+  = AllDays
+    { benchmarkAll :: Bool
+    , skip :: [Day]
+    }
   | OneDay DayOpts
 
 data DayOpts = DayOpts
@@ -69,9 +73,10 @@ main = do
 
   case options of
     OneDay opts -> runDay key opts
-    AllDays { benchmarkAll } -> do
+    AllDays { benchmarkAll, skip } -> do
+      let days = mapMaybe mkDay [1..25] \\ skip
       putStrLn "Running all days...\n"
-      forM_ (mapMaybe mkDay [1..25]) \day -> do
+      forM_ days \day -> do
         printH1 $ "----- DAY " <> show (dayInt day)
         runDay key (baseDayOpts day) { benchmark = benchmarkAll } `catch` \e ->
           let _ = e::SomeException in pure ()
@@ -148,7 +153,7 @@ cli =
   where
     dayOpts :: Opt.Parser DayOpts
     dayOpts = DayOpts
-      <$> Opt.argument readDay (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
+      <$> Opt.argument day (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
       <*> Opt.switch (Opt.short 's' <> Opt.long "show-parsed" <> Opt.help "Show the parsed input")
       <*> Opt.switch (Opt.short 'e' <> Opt.long "run-example"
         <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
@@ -158,14 +163,20 @@ cli =
     allOpt =
       Opt.flag' AllDays (Opt.short 'a' <> Opt.long "all" <> Opt.help "Run all available days' solutions")
       <*> benchmarkSwitch
+      <*> Opt.option days (Opt.short 's' <> Opt.long "skip" <> Opt.help "Skip days")
 
     benchmarkSwitch :: Opt.Parser Bool
     benchmarkSwitch = Opt.switch (Opt.short 'b' <> Opt.long "benchmark" <> Opt.help "Benchmark the solutions")
 
-    readDay :: Opt.ReadM Day
-    readDay = Opt.eitherReader \s ->
-      let err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
-      in maybeToEither err $ mkDay =<< readMaybe s
+    day :: Opt.ReadM Day
+    day = Opt.eitherReader readDay
+
+    days :: Opt.ReadM [Day]
+    days = Opt.eitherReader $ traverse readDay . words
+
+    readDay :: String -> Either String Day
+    readDay s = maybeToEither err $ mkDay =<< readMaybe s
+      where err = "There are 25 days of Christmas. '" <> s <> "' ain't one of them."
 
 fetchInput :: Day -> SessionKey -> IO Text
 fetchInput day key = do

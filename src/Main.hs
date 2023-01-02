@@ -48,7 +48,9 @@ data Solution = forall p a b . (Show p, Show a, Show b, NFData a, NFData b) =>
     , solve2 :: p -> b
     }
 
-data RunOpts = AllDays | OneDay DayOpts
+data RunOpts
+  = AllDays { benchmarkAll :: Bool }
+  | OneDay DayOpts
 
 data DayOpts = DayOpts
   { day :: Day
@@ -66,11 +68,11 @@ main = do
 
   case options of
     OneDay opts -> runDay key opts
-    AllDays -> do
+    AllDays { benchmarkAll } -> do
       putStrLn "Running all days...\n"
       forM_ (mapMaybe mkDay [1..25]) \day -> do
         putStrLn $ "----- DAY " <> show (dayInt day)
-        runDay key (baseDayOpts day) `catch` \e ->
+        runDay key (baseDayOpts day) { benchmark = benchmarkAll } `catch` \e ->
           let _ = e::SomeException in pure ()
         putStrLn ""
 
@@ -154,11 +156,15 @@ cli =
       <*> Opt.switch (Opt.short 's' <> Opt.long "show-parsed" <> Opt.help "Show the parsed input")
       <*> Opt.switch (Opt.short 'e' <> Opt.long "run-example"
         <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
-      <*> Opt.switch (Opt.short 'b' <> Opt.long "benchmark" <> Opt.help "Benchmark the solutions")
+      <*> benchmarkSwitch
 
     allOpt :: Opt.Parser RunOpts
-    allOpt = Opt.flag' AllDays (Opt.short 'a' <> Opt.long "all"
-      <> Opt.help "Run all available days' solutions")
+    allOpt =
+      Opt.flag' AllDays (Opt.short 'a' <> Opt.long "all" <> Opt.help "Run all available days' solutions")
+      <*> benchmarkSwitch
+
+    benchmarkSwitch :: Opt.Parser Bool
+    benchmarkSwitch = Opt.switch (Opt.short 'b' <> Opt.long "benchmark" <> Opt.help "Benchmark the solutions")
 
     readDay :: Opt.ReadM Day
     readDay = Opt.eitherReader \s ->

@@ -17,8 +17,8 @@ dependencies:
   - composition-extra
   - containers
   - criterion
-  - deepseq
   - data-interval
+  - deepseq
   - extra
   - matrix
   - microlens-platform
@@ -27,6 +27,7 @@ dependencies:
   - pqueue
   - safe
   - text
+  - text-ansi
   - vector
 
 default-extensions:

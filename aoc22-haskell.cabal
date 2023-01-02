@@ -70,5 +70,6 @@ executable aoc22-haskell
     , pqueue
     , safe
     , text
+    , text-ansi
     , vector
   default-language: Haskell2010

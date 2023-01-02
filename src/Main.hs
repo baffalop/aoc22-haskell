@@ -5,15 +5,16 @@ module Main (main) where
 import qualified Options.Applicative as Opt
 import qualified Advent
 import Advent (Day, mkDay, dayInt)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
-import Control.Monad (when, forM_)
+import Control.Monad (when, unless, forM_)
 import Control.Exception (catch, SomeException, IOException)
 import Text.Printf (printf)
 import Control.Applicative ((<|>))
 import Data.Maybe (mapMaybe)
+import qualified Data.Text.ANSI as ANSI
 import Control.DeepSeq (NFData)
 import qualified Criterion.Main as Criterion
 import qualified Criterion as Criterion.Report
@@ -71,7 +72,7 @@ main = do
     AllDays { benchmarkAll } -> do
       putStrLn "Running all days...\n"
       forM_ (mapMaybe mkDay [1..25]) \day -> do
-        putStrLn $ "----- DAY " <> show (dayInt day)
+        printH1 $ "----- DAY " <> show (dayInt day)
         runDay key (baseDayOpts day) { benchmark = benchmarkAll } `catch` \e ->
           let _ = e::SomeException in pure ()
         putStrLn ""
@@ -85,28 +86,30 @@ runDay key DayOpts{..} = case solutionFor day of
     input <- if runExample then readExampleInput day else fetchInput day key
 
     when benchmark do
-      putStrLn "Parse:"
+      printH2 "Parse:"
       Criterion.Report.benchmark $ Criterion.whnf parse input
+      putStrLn ""
 
     case parse input of
       Left e -> putStrLn $ "Parse error: " <> e
       Right parsed -> do
         when showParsed do
-          putStrLn "Parsed input:"
-          print parsed
+          unless benchmark $ printH2 "Parse:"
+          printValue parsed
           putStrLn ""
 
-        putStrLn "Part 1:"
+        printH2 "Part 1:"
         when benchmark do
           Criterion.Report.benchmark $ Criterion.nf solve1 parsed
           putStrLn ""
-        print $ solve1 parsed
+        printValue $ solve1 parsed
+        putStrLn ""
 
-        putStrLn "\nPart 2:"
+        printH2 "Part 2:"
         when benchmark do
           Criterion.Report.benchmark $ Criterion.nf solve2 parsed
           putStrLn ""
-        print $ solve2 parsed
+        printValue $ solve2 parsed
 
   where
     dayStr = show $ dayInt day
@@ -178,6 +181,15 @@ readExampleInput (dayInt -> day) =
     let _ = e :: IOException in
     fail $ "Have you created the file " <> file <> " ?"
   where file = "input/2022/ex-" <> printf "%02d" day <> ".txt"
+
+printH1 :: String -> IO ()
+printH1 = TIO.putStrLn . ANSI.bold . ANSI.magenta . pack
+
+printH2 :: String -> IO ()
+printH2 = TIO.putStrLn . ANSI.bold . ANSI.blue . pack
+
+printValue :: Show a => a -> IO ()
+printValue = TIO.putStrLn . ANSI.green . pack . show
 
 baseDayOpts :: Day -> DayOpts
 baseDayOpts day = DayOpts day False False False

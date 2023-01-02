@@ -122,7 +122,7 @@ solutionFor day = case dayInt day of
   7  -> Just $ Solution Day07.parse Day07.solve1 Day07.solve2
   8  -> Just $ simpleSn Day08.parse Day08.solve1 Day08.solve2
   9  -> Just $ Solution Day09.parse Day09.solve1 Day09.solve2
-  10 -> Nothing -- Just $ Solution Day10.parse Day10.solve1 Day10.solve2
+  10 -> Just $ Solution Day10.parse Day10.solve1 Day10.solve2
   11 -> Just $ Solution Day11.parse Day11.solve1 Day11.solve2
   12 -> Just $ Solution Day12.parse Day12.solve1 Day12.solve2
   13 -> Just $ Solution Day13.parse Day13.solve1 Day13.solve2
@@ -132,7 +132,7 @@ solutionFor day = case dayInt day of
   17 -> Just $ Solution Day17.parse Day17.solve1 Day17.solve2
   18 -> Just $ Solution Day18.parse Day18.solve1 Day18.solve2
   23 -> Just $ simpleSn Day23.parse Day23.solve1 Day23.solve2
-  25 -> Nothing -- Just $ Solution Day25.parse Day25.solve1 Day25.solve2
+  25 -> Just $ Solution Day25.parse Day25.solve1 Day25.solve2
   _ -> Nothing
   where
     simpleSn parse = Solution $ Right . parse

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Day10 (parse, solve1, solve2) where
 
 import Data.Text (Text)
@@ -9,10 +11,14 @@ import Utils ((<.>))
 import Control.Arrow ((>>>))
 import Data.Matrix (Matrix)
 import qualified Data.Matrix as Mx
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData)
 
 type Input = [Maybe Int]
 
-data Pixel = Black | White
+data Pixel = Black | White deriving (Generic)
+
+instance NFData Pixel
 instance Show Pixel where
   show Black = "."
   show White = "#"

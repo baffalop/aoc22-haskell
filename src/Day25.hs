@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Day25 (parse, solve1, solve2) where
 
 import Data.Text (Text)
@@ -6,9 +8,11 @@ import qualified Data.Attoparsec.Text as P
 import Parsing (linesOf)
 import Utils ((<.>))
 import Control.Applicative ((<|>))
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData)
 
-newtype Snafu = Snafu [Snafit] deriving (Eq)
-newtype Snafit = S Int deriving (Eq)
+newtype Snafu = Snafu [Snafit] deriving (Eq, Generic)
+newtype Snafit = S Int deriving (Eq, Generic)
 
 instance Show Snafit where
   show (S (-2)) = "="
@@ -33,6 +37,9 @@ instance Semigroup Snafu where
 
 instance Monoid Snafu where
   mempty = Snafu []
+
+instance NFData Snafit
+instance NFData Snafu
 
 parse :: Text -> Either String [Snafu]
 parse = parseOnly $ linesOf $ Snafu . reverse <.> P.many1 $ P.choice

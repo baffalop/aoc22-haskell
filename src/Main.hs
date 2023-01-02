@@ -52,10 +52,7 @@ data Solution = forall p a b . (Show p, Show a, Show b, NFData a, NFData b) =>
     }
 
 data RunOpts
-  = AllDays
-    { benchmarkAll :: Bool
-    , skip :: [Day]
-    }
+  = AllDays AllDayOpts
   | OneDay DayOpts
 
 data DayOpts = DayOpts
@@ -63,6 +60,11 @@ data DayOpts = DayOpts
   , showParsed :: Bool
   , runExample :: Bool
   , benchmark :: Bool
+  }
+
+data AllDayOpts = AllDayOpts
+  { benchmarkAll :: Bool
+  , skip :: [Day]
   }
 
 main :: IO ()
@@ -74,7 +76,7 @@ main = do
 
   case options of
     OneDay opts -> runDay key opts
-    AllDays { benchmarkAll, skip } -> do
+    AllDays AllDayOpts{ benchmarkAll, skip } -> do
       let days = mapMaybe mkDay [1..25] \\ skip
       putStrLn "Running all days...\n"
       forM_ days \day -> do
@@ -148,7 +150,7 @@ solutionFor day = case dayInt day of
 
 cli :: Opt.ParserInfo RunOpts
 cli =
-  Opt.info (Opt.helper <*> allOpt <|> OneDay <$> dayOpts) $ Opt.fullDesc
+  Opt.info (Opt.helper <*> (OneDay <$> dayOpts) <|> (AllDays <$> allOpt)) $ Opt.fullDesc
     <> Opt.header "Solutions to Advent of Code 2021"
     <> Opt.progDesc "Run solution(s) for the AoC puzzle of the given day"
   where
@@ -160,9 +162,9 @@ cli =
         <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
       <*> benchmarkSwitch
 
-    allOpt :: Opt.Parser RunOpts
+    allOpt :: Opt.Parser AllDayOpts
     allOpt =
-      Opt.flag' AllDays (Opt.short 'a' <> Opt.long "all" <> Opt.help "Run all available days' solutions")
+      Opt.flag' AllDayOpts (Opt.short 'a' <> Opt.long "all" <> Opt.help "Run all available days' solutions")
       <*> benchmarkSwitch
       <*> Opt.option days (Opt.short 's' <> Opt.long "skip" <> Opt.help "Skip days")
 

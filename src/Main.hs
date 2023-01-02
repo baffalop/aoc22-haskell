@@ -8,7 +8,7 @@ import qualified Data.Text.IO as TIO
 import Text.Read (readMaybe)
 import Data.Either.Extra (maybeToEither)
 import Control.Monad (when, forM_)
-import Control.Exception (catch, IOException)
+import Control.Exception (catch, SomeException, IOException)
 import Text.Printf (printf)
 import Control.Applicative ((<|>))
 import Data.Maybe (mapMaybe)
@@ -63,8 +63,9 @@ main = do
     AllDays -> do
       putStrLn "Running all days...\n"
       forM_ (mapMaybe mkDay [1..25]) \day -> do
-        putStrLn $ "----- DAY " <> show (dayInt day)
-        runDay key $ baseDayOpts day
+        putStrLn $ "----- DAY " <> show day
+        runDay key (baseDayOpts day) `catch` \e ->
+          let _ = e::SomeException in pure ()
         putStrLn ""
 
 runDay :: SessionKey -> DayOpts -> IO ()

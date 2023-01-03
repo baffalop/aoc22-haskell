@@ -15,7 +15,7 @@ import Data.Bifunctor (first, second)
 import Data.Tuple (swap)
 import Control.Arrow ((>>>), (***))
 import Control.Monad (replicateM_, (>=>))
-import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (+=), (^.))
+import Lens.Micro.Platform (Lens', makeLensesFor, (%=), (+=), (^.), (<~))
 import Debug.Trace (traceShowM)
 import Utils (within)
 

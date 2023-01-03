@@ -165,7 +165,10 @@ cli =
     allOpt =
       Opt.flag' AllDayOpts (Opt.short 'a' <> Opt.long "all" <> Opt.help "Run all available days' solutions")
       <*> benchmarkSwitch
-      <*> Opt.option days (Opt.short 's' <> Opt.long "skip" <> Opt.metavar "DAYS" <> Opt.help "Comma-separated list of days to skip")
+      <*> Opt.option days (
+        Opt.short 's' <> Opt.long "skip" <> Opt.metavar "DAYS" <> Opt.value []
+        <> Opt.help "Comma-separated list of days to skip"
+      )
 
     benchmarkSwitch :: Opt.Parser Bool
     benchmarkSwitch = Opt.switch (Opt.short 'b' <> Opt.long "benchmark" <> Opt.help "Benchmark the solutions")

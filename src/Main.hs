@@ -158,8 +158,7 @@ cli =
     dayOpts = DayOpts
       <$> Opt.argument day (Opt.metavar "DAY" <> Opt.help "Which day's solution to run")
       <*> Opt.switch (Opt.short 's' <> Opt.long "show-parsed" <> Opt.help "Show the parsed input")
-      <*> Opt.switch (Opt.short 'e' <> Opt.long "run-example"
-        <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
+      <*> Opt.switch (Opt.short 'e' <> Opt.long "example" <> Opt.help "Run the solution on the example input at ./input/[year]/ex-[day].txt instead of the problem input. This file needs to be manually created.")
       <*> benchmarkSwitch
 
     allOpt :: Opt.Parser AllDayOpts

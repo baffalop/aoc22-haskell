@@ -151,7 +151,7 @@ solutionFor day = case dayInt day of
 cli :: Opt.ParserInfo RunOpts
 cli =
   Opt.info (Opt.helper <*> (OneDay <$> dayOpts) <|> (AllDays <$> allOpt)) $ Opt.fullDesc
-    <> Opt.header "Solutions to Advent of Code 2021"
+    <> Opt.header "Solutions to Advent of Code 2022"
     <> Opt.progDesc "Run solution(s) for the AoC puzzle of the given day"
   where
     dayOpts :: Opt.Parser DayOpts

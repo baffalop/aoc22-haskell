@@ -82,7 +82,7 @@ main = do
       forM_ days \day -> do
         printH1 $ "----- DAY " <> show (dayInt day)
         runDay key (baseDayOpts day) { benchmark = benchmarkAll } `catch` \e ->
-          let _ = e::SomeException in pure ()
+          putStrLn $ "Error: " <> show (e::SomeException)
         putStrLn ""
 
 runDay :: SessionKey -> DayOpts -> IO ()

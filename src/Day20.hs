@@ -1,9 +1,10 @@
 module Day20 (parse, solve1, solve2) where
 
-import Data.Vector (Vector)
+import Data.Vector (Vector, (!))
 import qualified Data.Vector as V
 import Data.Text (Text, unpack)
 import Utils ((<.>))
+import Data.Maybe (fromMaybe)
 
 type Input = Vector Int
 
@@ -14,8 +15,13 @@ data Mixing = Unmixed | Mixed deriving (Show)
 parse :: Text -> Input
 parse = read <.> V.fromList . lines . unpack
 
-solve1 :: Input -> Input
-solve1 = mix
+solve1 :: Input -> Int
+solve1 = sum . coords . mix
+  where
+    coords :: Input -> [Int]
+    coords xs =
+      let i0 = fromMaybe 0 $ V.findIndex (== 0) xs in
+      (xs !) . (`mod` length xs) . (i0 +) <$> [1000, 2000, 3000]
 
 solve2 :: Input -> Input
 solve2 = undefined

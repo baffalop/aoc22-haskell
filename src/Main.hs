@@ -39,6 +39,7 @@ import qualified Day15
 import qualified Day16
 import qualified Day17
 import qualified Day18
+import qualified Day20
 import qualified Day23
 import qualified Day25
 
@@ -142,6 +143,7 @@ solutionFor day = case dayInt day of
   16 -> Just $ Solution Day16.parse Day16.solve1 Day16.solve2
   17 -> Just $ Solution Day17.parse Day17.solve1 Day17.solve2
   18 -> Just $ Solution Day18.parse Day18.solve1 Day18.solve2
+  20 -> Just $ simpleSn Day20.parse Day20.solve1 Day20.solve2
   23 -> Just $ simpleSn Day23.parse Day23.solve1 Day23.solve2
   25 -> Just $ Solution Day25.parse Day25.solve1 Day25.solve2
   _ -> Nothing
